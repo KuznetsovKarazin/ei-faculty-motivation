@@ -1,0 +1,202 @@
+{
+  "nrc_lexicon": {
+    "overall": {
+      "accuracy": 0.4,
+      "macro_f1": 0.38173297966401415,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.29      0.75      0.41         8\n     disgust       0.50      0.25      0.33         8\n        fear       0.60      0.38      0.46         8\n         joy       0.50      0.50      0.50         8\n     sadness       0.50      0.12      0.20         8\n\n    accuracy                           0.40        40\n   macro avg       0.48      0.40      0.38        40\nweighted avg       0.48      0.40      0.38        40\n",
+      "confusion_matrix": [
+        [
+          6,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          0,
+          3,
+          1
+        ],
+        [
+          5,
+          0,
+          3,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          0,
+          4,
+          0
+        ],
+        [
+          6,
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ]
+    },
+    "accuracy_by_emotion": {
+      "anger": 0.75,
+      "disgust": 0.25,
+      "fear": 0.375,
+      "sadness": 0.125,
+      "joy": 0.5
+    },
+    "accuracy_by_context_tag": {
+      "decision_making_exclusion": 1.0,
+      "workload_unfairness": 1.0,
+      "technology_imposed": 0.0,
+      "autonomy_override": 1.0,
+      "communication_boundaries": 1.0,
+      "evaluation_fairness": 1.0,
+      "grading_overload": 1.0,
+      "bureaucracy_autonomy": 0.0,
+      "integrity_favoritism": 0.0,
+      "exploitation_adjuncts": 0.0,
+      "academic_integrity": 0.0,
+      "metrics_gaming": 0.0,
+      "ethics_pressure": 0.0,
+      "credit_appropriation": 1.0,
+      "grant_ethics": 0.0,
+      "integrity_enforcement": 1.0,
+      "tenure_evaluation": 0.0,
+      "student_feedback_anxiety": 0.0,
+      "ai_displacement": 1.0,
+      "public_presentation": 0.0,
+      "contract_renewal": 1.0,
+      "performance_review": 1.0,
+      "peer_review_harshness": 0.0,
+      "technical_failure": 0.0,
+      "post_leave_isolation": 1.0,
+      "course_cancellation_unrecognized": 0.0,
+      "social_isolation": 0.0,
+      "mentorship_loss": 0.0,
+      "meeting_disengagement": 0.0,
+      "supervision_unrecognized": 0.0,
+      "remote_isolation": 0.0,
+      "community_loss": 0.0,
+      "student_impact": 0.0,
+      "research_success": 1.0,
+      "teaching_innovation": 1.0,
+      "peer_recognition": 1.0,
+      "mentorship_milestone": 0.0,
+      "resource_improvement": 0.0,
+      "student_creativity": 1.0,
+      "interdisciplinary_growth": 0.0
+    }
+  },
+  "tfidf_logreg": {
+    "overall": {
+      "accuracy": 0.225,
+      "macro_f1": 0.2832696715049656,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.33      0.12      0.18         8\n     disgust       0.00      0.00      0.00         8\n        fear       1.00      0.38      0.55         8\n         joy       0.67      0.50      0.57         8\n     sadness       0.11      0.12      0.12         8\n\n   micro avg       0.41      0.23      0.29        40\n   macro avg       0.42      0.23      0.28        40\nweighted avg       0.42      0.23      0.28        40\n",
+      "confusion_matrix": [
+        [
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          2,
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          0,
+          3,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          0,
+          4,
+          3
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ]
+    },
+    "accuracy_by_emotion": {
+      "anger": 0.125,
+      "disgust": 0.0,
+      "fear": 0.375,
+      "sadness": 0.125,
+      "joy": 0.5
+    },
+    "accuracy_by_context_tag": {
+      "decision_making_exclusion": 0.0,
+      "workload_unfairness": 0.0,
+      "technology_imposed": 0.0,
+      "autonomy_override": 0.0,
+      "communication_boundaries": 1.0,
+      "evaluation_fairness": 0.0,
+      "grading_overload": 0.0,
+      "bureaucracy_autonomy": 0.0,
+      "integrity_favoritism": 0.0,
+      "exploitation_adjuncts": 0.0,
+      "academic_integrity": 0.0,
+      "metrics_gaming": 0.0,
+      "ethics_pressure": 0.0,
+      "credit_appropriation": 0.0,
+      "grant_ethics": 0.0,
+      "integrity_enforcement": 0.0,
+      "tenure_evaluation": 1.0,
+      "student_feedback_anxiety": 0.0,
+      "ai_displacement": 0.0,
+      "public_presentation": 0.0,
+      "contract_renewal": 0.0,
+      "performance_review": 1.0,
+      "peer_review_harshness": 1.0,
+      "technical_failure": 0.0,
+      "post_leave_isolation": 0.0,
+      "course_cancellation_unrecognized": 0.0,
+      "social_isolation": 0.0,
+      "mentorship_loss": 0.0,
+      "meeting_disengagement": 0.0,
+      "supervision_unrecognized": 0.0,
+      "remote_isolation": 0.0,
+      "community_loss": 1.0,
+      "student_impact": 0.0,
+      "research_success": 0.0,
+      "teaching_innovation": 0.0,
+      "peer_recognition": 1.0,
+      "mentorship_milestone": 1.0,
+      "resource_improvement": 1.0,
+      "student_creativity": 1.0,
+      "interdisciplinary_growth": 0.0
+    }
+  }
+}

@@ -1,0 +1,19 @@
+# downloaded third-party datasets (re-downloaded automatically, see src/data_loader.py)
+data/raw/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+
+# environments
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

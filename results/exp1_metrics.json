@@ -1,0 +1,262 @@
+{
+  "nrc_lexicon": {
+    "in_domain": {
+      "accuracy": 0.3836601307189543,
+      "macro_f1": 0.23591306521745656,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.22      0.29      0.25       520\n     disgust       0.07      0.18      0.10        76\n        fear       0.05      0.21      0.08        77\n         joy       0.63      0.38      0.47      1603\n     sadness       0.20      0.14      0.17       259\n    surprise       0.26      0.06      0.09       449\n     neutral       0.42      0.57      0.49      1606\n\n    accuracy                           0.38      4590\n   macro avg       0.26      0.26      0.24      4590\nweighted avg       0.43      0.38      0.38      4590\n",
+      "confusion_matrix": [
+        [
+          151,
+          40,
+          34,
+          53,
+          21,
+          11,
+          210
+        ],
+        [
+          26,
+          14,
+          13,
+          6,
+          6,
+          0,
+          11
+        ],
+        [
+          25,
+          2,
+          16,
+          5,
+          7,
+          1,
+          21
+        ],
+        [
+          150,
+          23,
+          89,
+          602,
+          48,
+          34,
+          657
+        ],
+        [
+          43,
+          27,
+          19,
+          41,
+          37,
+          3,
+          89
+        ],
+        [
+          55,
+          13,
+          35,
+          55,
+          10,
+          25,
+          256
+        ],
+        [
+          226,
+          75,
+          109,
+          198,
+          58,
+          24,
+          916
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness",
+        "surprise",
+        "neutral"
+      ]
+    },
+    "cross_dataset": {
+      "accuracy": 0.3259083439839328,
+      "macro_f1": 0.3082886070444244,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.24      0.55      0.34      1096\n     disgust       0.48      0.13      0.20      1096\n        fear       0.45      0.30      0.36      1095\n         joy       0.38      0.49      0.43      1094\n     sadness       0.32      0.16      0.22      1096\n\n    accuracy                           0.33      5477\n   macro avg       0.38      0.33      0.31      5477\nweighted avg       0.38      0.33      0.31      5477\n",
+      "confusion_matrix": [
+        [
+          608,
+          51,
+          82,
+          256,
+          99
+        ],
+        [
+          545,
+          140,
+          105,
+          227,
+          79
+        ],
+        [
+          437,
+          39,
+          324,
+          125,
+          170
+        ],
+        [
+          409,
+          34,
+          84,
+          533,
+          34
+        ],
+        [
+          505,
+          28,
+          118,
+          265,
+          180
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ]
+    }
+  },
+  "tfidf_logreg": {
+    "in_domain": {
+      "accuracy": 0.5986928104575163,
+      "macro_f1": 0.5380213431305662,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.40      0.50      0.44       520\n     disgust       0.39      0.55      0.45        76\n        fear       0.49      0.73      0.58        77\n         joy       0.83      0.66      0.73      1603\n     sadness       0.43      0.54      0.48       259\n    surprise       0.40      0.54      0.46       449\n     neutral       0.63      0.59      0.61      1606\n\n    accuracy                           0.60      4590\n   macro avg       0.51      0.59      0.54      4590\nweighted avg       0.63      0.60      0.61      4590\n",
+      "confusion_matrix": [
+        [
+          259,
+          20,
+          10,
+          33,
+          32,
+          49,
+          117
+        ],
+        [
+          15,
+          42,
+          1,
+          1,
+          4,
+          3,
+          10
+        ],
+        [
+          4,
+          2,
+          56,
+          4,
+          4,
+          1,
+          6
+        ],
+        [
+          105,
+          10,
+          13,
+          1059,
+          46,
+          97,
+          273
+        ],
+        [
+          26,
+          3,
+          6,
+          17,
+          141,
+          19,
+          47
+        ],
+        [
+          34,
+          9,
+          9,
+          32,
+          18,
+          241,
+          106
+        ],
+        [
+          209,
+          23,
+          20,
+          133,
+          80,
+          191,
+          950
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness",
+        "surprise",
+        "neutral"
+      ]
+    },
+    "cross_dataset": {
+      "accuracy": 0.2590834398393281,
+      "macro_f1": 0.31283607554154563,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.46      0.19      0.26      1096\n     disgust       0.78      0.07      0.13      1096\n        fear       0.67      0.29      0.41      1095\n         joy       0.60      0.22      0.32      1094\n     sadness       0.38      0.53      0.45      1096\n\n   micro avg       0.48      0.26      0.34      5477\n   macro avg       0.58      0.26      0.31      5477\nweighted avg       0.58      0.26      0.31      5477\n",
+      "confusion_matrix": [
+        [
+          203,
+          8,
+          35,
+          33,
+          296
+        ],
+        [
+          122,
+          79,
+          41,
+          49,
+          213
+        ],
+        [
+          46,
+          8,
+          317,
+          17,
+          214
+        ],
+        [
+          18,
+          4,
+          49,
+          236,
+          219
+        ],
+        [
+          53,
+          2,
+          28,
+          57,
+          584
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ]
+    }
+  }
+}
