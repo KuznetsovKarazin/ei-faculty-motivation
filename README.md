@@ -105,6 +105,12 @@ python run_all.py             # full run on the full GoEmotions training set
 python run_all.py --use_transformer   # also fine-tune a transformer in Exp.1
                                         # (needs internet access to the
                                         # Hugging Face Hub)
+python run_all.py --use_llm           # also try an LLM few-shot classifier
+                                        # in Exp.1 (subsampled) and Exp.2
+                                        # (full 40 vignettes); needs
+                                        # ANTHROPIC_API_KEY and costs real
+                                        # API calls (cached on disk, see
+                                        # results/.llm_cache.json)
 ```
 
 Each experiment can also be run on its own, e.g. `python
@@ -139,29 +145,50 @@ cosine similarity, plus a paired t-test / Wilcoxon signed-rank test. Also
 exports a blank rubric (`results/exp3_rubric_template.csv`) for optional
 human expert scoring.
 
+**Optional 4th classifier (`--use_llm`) — LLM few-shot.** Instead of
+keyword/n-gram matching, classifies via an LLM API call with a few labeled
+in-context examples per class. Skipped automatically without
+`ANTHROPIC_API_KEY`. Costs one API call per *predicted* example (responses
+are cached in `results/.llm_cache.json`), so Exp.1 evaluates it on a
+subsample (`--llm_sample_size`, default 150) rather than the full test
+sets, while Exp.2 always runs it on the full 40 vignettes.
+
 ## 8. Results (full run, no subsampling)
 
-Classifier accuracy across an increasing domain-shift ladder:
+Classifier accuracy across an increasing domain-shift ladder, with the
+majority-class ("always predict the most frequent label") baseline for
+reference — without it, "38% accuracy" is impossible to judge correctly:
 
-| model         | GoEmotions (in-domain) | ISEAR (cross-dataset) | Faculty vignettes (near-domain) |
-|---------------|:---:|:---:|:---:|
-| `nrc_lexicon`  | 0.384 | 0.326 | 0.400 |
-| `tfidf_logreg` | 0.599 | 0.259 | 0.225 |
+| model | majority-class baseline | GoEmotions (in-domain) | ISEAR (cross-dataset) | Faculty vignettes (near-domain) |
+|---|:---:|:---:|:---:|:---:|
+| (always predict the most frequent class) | 0.350 / 0.200 / 0.200 | — | — | — |
+| `nrc_lexicon`  | — | 0.384 | 0.326 | 0.400 |
+| `tfidf_logreg` | — | 0.599 | 0.259 | 0.225 |
 
-The more sophisticated, purely in-domain-trained classifier
-(`tfidf_logreg`) is clearly better **in-domain**, but generalizes **worse**
-than the much simpler lexicon-counting baseline both cross-dataset and on
-the faculty vignettes. This is itself a relevant finding for anyone
-building this kind of tool cheaply on public data: in-domain accuracy is
-not a safe proxy for real-world (out-of-domain) performance, and a
-hybrid/ensemble or few-shot LLM-based approach is likely needed for
-production use — see `--use_transformer` and the `llm` mode in
-`intervention_generator.py` as starting points.
+(majority-class baseline: 0.350 for GoEmotions' 7 imbalanced classes, 0.200
+for ISEAR's and the vignettes' 5 balanced classes)
+
+Read against that baseline: `tfidf_logreg` clearly beats chance in-domain
+(0.599 vs 0.350) but is barely above chance once the domain shifts (0.259
+and 0.225 vs 0.200). `nrc_lexicon` is the opposite pattern: weaker
+in-domain, but the only one of the two that stays meaningfully above
+chance once the domain shifts (0.326 and 0.400 vs 0.200). The model that
+"wins" in-domain is not the model you would want to actually deploy on
+faculty text — a finding about domain generalization, not a broken
+pipeline.
 
 Sadness (linked to the relatedness need — isolation, lack of recognition)
 is the hardest emotion to detect on the faculty vignettes for both models
-(12% accuracy), which is a meaningful limitation given how central
-isolation/recognition issues are in the faculty-burnout literature.
+(12% accuracy, barely above what you'd expect from random within that
+class). Inspecting the actual misclassifications shows two distinct,
+explainable failure modes: `tfidf_logreg` defaults to "neutral" whenever
+the text lacks the informal/Reddit-style markers it learned to associate
+with anger/disgust (5/8 anger and 5/8 disgust vignettes predicted
+"neutral"); `nrc_lexicon` over-predicts "anger" for fear/sadness vignettes
+(5/8 and 6/8 respectively) because many negative-valence words in the NRC
+lexicon are tagged with anger *together with* fear/sadness, so anger wins
+the word-count vote. Neither failure mode is really about model capacity —
+both are about the (mismatched) training distribution.
 
 Intervention message relevance (`exp3`, TF-IDF similarity to the target
 need description, n = 40 vignettes):
@@ -176,7 +203,50 @@ paired t-test t = 6.81, p < 0.0001; Wilcoxon signed-rank p = 0.0001.
 Full metrics (per-class precision/recall/F1, confusion matrices,
 per-vignette predictions) are in `results/`.
 
-## 9. Limitations & future work
+## 9. On model choice: why not just use a fancier architecture?
+
+It is tempting to read "40% accuracy" as "use a better model" and reach for
+something like a Kolmogorov-Arnold Network (KAN/pyKAN). That is very
+unlikely to help here, for a concrete reason: KANs replace fixed
+activation functions with learnable splines, which is a real advantage for
+fitting smooth, low-dimensional continuous functions (the symbolic
+regression / scientific-computing problems they were introduced for). Text
+classification is the opposite kind of problem — high-dimensional, sparse,
+discrete token input — and there is no published evidence that KANs help
+there; if anything they are harder to train and less mature for this data
+type. The bottleneck demonstrated by Exp.1/Exp.2 is **domain mismatch**
+(training distribution vs. the target text register), not insufficient
+model expressiveness, so a more expressive function approximator does not
+address it.
+
+What would plausibly help, roughly in order of expected impact:
+
+1. **Real or higher-fidelity in-domain data.** The only way to reliably get
+   high accuracy *specifically on faculty text* is to have labeled
+   examples from that text register. This is exactly the gap this
+   feasibility study identified — and the natural next, separately funded
+   empirical step (real faculty data collection, see Limitations below).
+2. **LLM-based few-shot classification** (`--use_llm` in this repo).
+   Because it draws on broad semantic/contextual knowledge rather than
+   surface keyword overlap, it is the most likely of the available options
+   to catch *implied* emotion (e.g. quiet isolation phrased without any
+   "sad" word), which is exactly where the current baselines fail hardest.
+   This is genuinely testable: run `--use_llm` with your own
+   `ANTHROPIC_API_KEY` and compare against the table above.
+3. **A fine-tuned transformer** (`--use_transformer`). Likely improves the
+   in-domain GoEmotions number somewhat over `tfidf_logreg` (published
+   GoEmotions benchmarks with transformers are meaningfully but not
+   dramatically higher), and may generalize a bit better cross-domain than
+   raw TF-IDF n-grams because it carries pretrained semantic
+   representations rather than purely lexical ones — but it is not
+   expected to close the domain gap on its own.
+
+None of these change the central methodological point: a classifier's
+in-domain accuracy is not a safe proxy for how it will perform on a
+different population, and that gap should be measured and reported, not
+assumed away by picking a bigger model.
+
+## 10. Limitations & future work
 
 - No real faculty data was used or collected; Experiments 2-3 use
   illustrative, researcher-authored vignettes, not field data.
@@ -190,7 +260,7 @@ per-vignette predictions) are in `results/`.
   (WLEIS or TEIQue-SF for emotional intelligence, WTMST for teacher
   motivation), with ethics committee approval and informed consent.
 
-## 10. Datasets & attribution
+## 11. Datasets & attribution
 
 - **GoEmotions**: Demszky, D., Nemoto, K., Briakou, E., Yenidogan, M.,
   Sharma, S., Cowen, A., Nemenman, I., & Ravi, S. (2020). GoEmotions: A
@@ -202,11 +272,11 @@ per-vignette predictions) are in `results/`.
   Intelligence*, 29(3), 436-465. See `data/lexicon/README.md` for license
   notes — free for research use.
 
-## 11. License
+## 12. License
 
 Code in this repository is released under the MIT License (see `LICENSE`).
 The third-party datasets/lexicon are not covered by that license — see
-Section 10 above.
+Section 11 above.
 
 ---
 Usage instructions in Russian: see `INSTRUCTIONS_RU.md`.

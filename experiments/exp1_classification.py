@@ -13,6 +13,7 @@ Usage:
     python experiments/exp1_classification.py
     python experiments/exp1_classification.py --quick
     python experiments/exp1_classification.py --use_transformer
+    python experiments/exp1_classification.py --use_llm --llm_sample_size 150
 """
 
 import argparse
@@ -29,7 +30,8 @@ import matplotlib.pyplot as plt
 from src.data_loader import load_goemotions, load_isear_common_labels
 from src.label_mapping import COMMON_LABELS, EKMAN_PLUS_NEUTRAL
 from src.metrics import classification_metrics
-from src.models import (NRCLexiconBaseline, TfidfBaseline, TransformerBaseline,
+from src.models import (LLMFewShotBaseline, LLMUnavailableError,
+                         NRCLexiconBaseline, TfidfBaseline, TransformerBaseline,
                          TransformerUnavailableError)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -56,7 +58,8 @@ def plot_confusion_matrix(cm, labels, title, out_path):
     plt.close(fig)
 
 
-def run(quick=False, use_transformer=False, sample_size=None):
+def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
+        llm_sample_size=150):
     os.makedirs(RESULTS_DIR, exist_ok=True)
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
@@ -136,6 +139,38 @@ def run(quick=False, use_transformer=False, sample_size=None):
             print(f"[skipped] transformer baseline unavailable: {exc}")
             all_results["transformer"] = {"skipped_reason": str(exc)}
 
+    if use_llm:
+        print("\n=== llm_fewshot (optional) ===")
+        try:
+            lmodel = LLMFewShotBaseline()
+            lmodel.fit(train_df["text"], train_df["label"])
+
+            test_sub = test_df.sample(n=min(llm_sample_size, len(test_df)),
+                                       random_state=42)
+            isear_sub = isear_df.sample(n=min(llm_sample_size, len(isear_df)),
+                                         random_state=42)
+            print(f"(LLM calls cost money/time: evaluating on a subsample of "
+                  f"{len(test_sub)} + {len(isear_sub)} rows, not the full sets. "
+                  "Increase --llm_sample_size for a larger, more reliable estimate.)")
+
+            preds_in = lmodel.predict(test_sub["text"], EKMAN_PLUS_NEUTRAL)
+            metrics_in = classification_metrics(test_sub["label"], preds_in,
+                                                 EKMAN_PLUS_NEUTRAL)
+            preds_cross = lmodel.predict(isear_sub["text"], COMMON_LABELS)
+            metrics_cross = classification_metrics(isear_sub["label"], preds_cross,
+                                                     COMMON_LABELS)
+            all_results["llm_fewshot"] = {"in_domain": metrics_in,
+                                           "cross_dataset": metrics_cross,
+                                           "n_in_domain": len(test_sub),
+                                           "n_cross_dataset": len(isear_sub)}
+            print(f"in-domain accuracy={metrics_in['accuracy']:.3f} "
+                  f"(n={len(test_sub)})")
+            print(f"cross-dataset accuracy={metrics_cross['accuracy']:.3f} "
+                  f"(n={len(isear_sub)})")
+        except LLMUnavailableError as exc:
+            print(f"[skipped] llm_fewshot baseline unavailable: {exc}")
+            all_results["llm_fewshot"] = {"skipped_reason": str(exc)}
+
     out_path = os.path.join(RESULTS_DIR, "exp1_metrics.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=2)
@@ -153,6 +188,13 @@ if __name__ == "__main__":
     parser.add_argument("--use_transformer", action="store_true",
                          help="also try the optional transformer baseline "
                               "(needs internet access to Hugging Face Hub)")
+    parser.add_argument("--use_llm", action="store_true",
+                         help="also try the optional LLM few-shot baseline "
+                              "(needs ANTHROPIC_API_KEY and internet access)")
+    parser.add_argument("--llm_sample_size", type=int, default=150,
+                         help="number of rows to evaluate the LLM baseline on "
+                              "per eval set, to control API cost (default: 150)")
     args = parser.parse_args()
     run(quick=args.quick, use_transformer=args.use_transformer,
-        sample_size=args.sample_size)
+        sample_size=args.sample_size, use_llm=args.use_llm,
+        llm_sample_size=args.llm_sample_size)

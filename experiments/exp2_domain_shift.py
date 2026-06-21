@@ -23,6 +23,7 @@ classifiers, not as evidence about real faculty populations.
 Usage:
     python experiments/exp2_domain_shift.py
     python experiments/exp2_domain_shift.py --quick
+    python experiments/exp2_domain_shift.py --use_llm
 """
 
 import argparse
@@ -36,7 +37,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.data_loader import load_goemotions
 from src.label_mapping import COMMON_LABELS
 from src.metrics import classification_metrics
-from src.models import NRCLexiconBaseline, TfidfBaseline
+from src.models import (LLMFewShotBaseline, LLMUnavailableError,
+                         NRCLexiconBaseline, TfidfBaseline)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(REPO_ROOT, "results")
@@ -63,7 +65,7 @@ def per_group_accuracy(rows, pred_key, group_key="expected_emotion"):
     return {g: correct / total for g, (correct, total) in groups.items()}
 
 
-def run(quick=False, sample_size=None):
+def run(quick=False, sample_size=None, use_llm=False):
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     print("Loading GoEmotions train split (to train the same classifiers as Exp.1) ...")
@@ -88,11 +90,7 @@ def run(quick=False, sample_size=None):
     for name, model in models.items():
         print(f"\n=== {name} ===")
         model.fit(train_df["text"], train_df["label"])
-
-        if name == "nrc_lexicon":
-            preds = model.predict(vignette_texts, COMMON_LABELS)
-        else:
-            preds = model.predict(vignette_texts)
+        preds = model.predict(vignette_texts, COMMON_LABELS)
 
         pred_key = f"{name}_pred"
         for r, p in zip(vignette_rows, preds):
@@ -111,6 +109,32 @@ def run(quick=False, sample_size=None):
             "accuracy_by_emotion": by_emotion,
             "accuracy_by_context_tag": by_category,
         }
+
+    if use_llm:
+        print("\n=== llm_fewshot (optional) ===")
+        try:
+            lmodel = LLMFewShotBaseline()
+            lmodel.fit(train_df["text"], train_df["label"])
+            preds = lmodel.predict(vignette_texts, COMMON_LABELS)
+
+            pred_key = "llm_fewshot_pred"
+            for r, p in zip(vignette_rows, preds):
+                r[pred_key] = p
+
+            metrics = classification_metrics(vignette_labels, preds, COMMON_LABELS)
+            by_emotion = per_group_accuracy(vignette_rows, pred_key, "expected_emotion")
+            by_category = per_group_accuracy(vignette_rows, pred_key, "context_tag")
+            print(f"vignette accuracy={metrics['accuracy']:.3f} "
+                  f"macro_f1={metrics['macro_f1']:.3f}")
+            print("accuracy by emotion:", {k: round(v, 2) for k, v in by_emotion.items()})
+            all_metrics["llm_fewshot"] = {
+                "overall": metrics,
+                "accuracy_by_emotion": by_emotion,
+                "accuracy_by_context_tag": by_category,
+            }
+        except LLMUnavailableError as exc:
+            print(f"[skipped] llm_fewshot baseline unavailable: {exc}")
+            all_metrics["llm_fewshot"] = {"skipped_reason": str(exc)}
 
     # save per-vignette predictions for inspection / appendix table
     pred_path = os.path.join(RESULTS_DIR, "exp2_predictions.csv")
@@ -134,5 +158,8 @@ if __name__ == "__main__":
     parser.add_argument("--quick", action="store_true",
                          help="use a small training subsample for a fast smoke test")
     parser.add_argument("--sample_size", type=int, default=None)
+    parser.add_argument("--use_llm", action="store_true",
+                         help="also try the optional LLM few-shot baseline on all "
+                              "40 vignettes (needs ANTHROPIC_API_KEY and internet)")
     args = parser.parse_args()
-    run(quick=args.quick, sample_size=args.sample_size)
+    run(quick=args.quick, sample_size=args.sample_size, use_llm=args.use_llm)
