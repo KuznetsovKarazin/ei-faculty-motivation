@@ -64,20 +64,43 @@ def main():
     exp3_results = exp3_intervention_quality.run(mode=mode)
 
     print("\n##### SUMMARY #####")
-    for model in ("nrc_lexicon", "tfidf_logreg", "llm_fewshot"):
+    accuracies_for_plot = {
+        "GoEmotions\n(in-domain)": {},
+        "ISEAR\n(cross-dataset)": {},
+        "Vignettes\n(near-domain)": {},
+    }
+    for model in ("nrc_lexicon", "tfidf_logreg", "tfidf_logreg_5class", "llm_fewshot"):
         if model not in exp1_results or "skipped_reason" in exp1_results.get(model, {}):
             continue
-        in_dom = exp1_results[model]["in_domain"]["accuracy"]
-        cross = exp1_results[model]["cross_dataset"]["accuracy"]
+        m1 = exp1_results[model]
+        cross = m1["cross_dataset"]["accuracy"]
+        in_dom = m1["in_domain"]["accuracy"] if "in_domain" in m1 else None
         vign = exp2_results.get(model, {}).get("overall", {}).get("accuracy")
+        in_dom_str = f"{in_dom:.3f}" if in_dom is not None else "n/a (not a fair in-domain comparison)"
         vign_str = f"{vign:.3f}" if vign is not None else "n/a"
-        print(f"{model:14s}  GoEmotions(in-domain)={in_dom:.3f}  "
+        print(f"{model:20s}  GoEmotions(in-domain)={in_dom_str}  "
               f"ISEAR(cross-dataset)={cross:.3f}  "
               f"FacultyVignettes(near-domain)={vign_str}")
-    print(f"intervention relevance (TF-IDF sim to need): "
+        if in_dom is not None:
+            accuracies_for_plot["GoEmotions\n(in-domain)"][model] = in_dom
+        accuracies_for_plot["ISEAR\n(cross-dataset)"][model] = cross
+        if vign is not None:
+            accuracies_for_plot["Vignettes\n(near-domain)"][model] = vign
+
+    from src.plotting import plot_domain_shift_ladder
+    ladder_path = "results/figures/domain_shift_ladder.png"
+    plot_domain_shift_ladder(accuracies_for_plot, ladder_path)
+    print(f"\nSaved domain-shift summary chart to {ladder_path}")
+
+    print(f"\nintervention relevance (TF-IDF sim to need), oracle emotion: "
           f"generic={exp3_results['mean_sim_generic']:.3f}  "
-          f"personalized={exp3_results['mean_sim_personalized']:.3f}  "
-          f"(paired t-test p={exp3_results['paired_ttest']['p']:.4f})")
+          f"personalized={exp3_results['mean_sim_personalized_oracle']:.3f}  "
+          f"(paired t-test p={exp3_results['oracle_vs_generic']['paired_ttest']['p']:.4f})")
+    if "mean_sim_personalized_e2e" in exp3_results:
+        print(f"intervention relevance, end-to-end (predicted emotion): "
+              f"personalized={exp3_results['mean_sim_personalized_e2e']:.3f}  "
+              f"need_match_rate={exp3_results['need_match_rate']:.1%}  "
+              f"(vs generic, paired t-test p={exp3_results['e2e_vs_generic']['paired_ttest']['p']:.4f})")
     print("\nAll detailed results are saved under results/")
 
 

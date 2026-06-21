@@ -47,7 +47,8 @@
         "fear",
         "joy",
         "sadness"
-      ]
+      ],
+      "out_of_label_space_rate": 0.0
     },
     "accuracy_by_emotion": {
       "anger": 0.6,
@@ -182,7 +183,8 @@
         "fear",
         "joy",
         "sadness"
-      ]
+      ],
+      "out_of_label_space_rate": 0.49333333333333335
     },
     "accuracy_by_emotion": {
       "anger": 0.06666666666666667,
@@ -265,6 +267,142 @@
       "informal_community_joy": 0.0,
       "experiment_success": 0.0,
       "student_nomination": 0.0,
+      "return_welcome": 0.0,
+      "breakthrough_moment": 0.0
+    }
+  },
+  "tfidf_logreg_5class": {
+    "overall": {
+      "accuracy": 0.38666666666666666,
+      "macro_f1": 0.3659655377302436,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.37      0.47      0.41        15\n     disgust       0.00      0.00      0.00        15\n        fear       1.00      0.47      0.64        15\n         joy       0.42      0.53      0.47        15\n     sadness       0.23      0.47      0.31        15\n\n    accuracy                           0.39        75\n   macro avg       0.40      0.39      0.37        75\nweighted avg       0.40      0.39      0.37        75\n",
+      "confusion_matrix": [
+        [
+          7,
+          0,
+          0,
+          3,
+          5
+        ],
+        [
+          5,
+          0,
+          0,
+          3,
+          7
+        ],
+        [
+          1,
+          0,
+          7,
+          2,
+          5
+        ],
+        [
+          1,
+          0,
+          0,
+          8,
+          6
+        ],
+        [
+          5,
+          0,
+          0,
+          3,
+          7
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ],
+      "out_of_label_space_rate": 0.0
+    },
+    "accuracy_by_emotion": {
+      "anger": 0.4666666666666667,
+      "disgust": 0.0,
+      "fear": 0.4666666666666667,
+      "sadness": 0.4666666666666667,
+      "joy": 0.5333333333333333
+    },
+    "accuracy_by_context_tag": {
+      "decision_making_exclusion": 0.0,
+      "workload_unfairness": 0.0,
+      "technology_imposed": 1.0,
+      "autonomy_override": 0.0,
+      "communication_boundaries": 1.0,
+      "evaluation_fairness": 1.0,
+      "grading_overload": 0.0,
+      "bureaucracy_autonomy": 1.0,
+      "integrity_favoritism": 0.0,
+      "exploitation_adjuncts": 0.0,
+      "academic_integrity": 0.0,
+      "metrics_gaming": 0.0,
+      "ethics_pressure": 0.0,
+      "credit_appropriation": 0.0,
+      "grant_ethics": 0.0,
+      "integrity_enforcement": 0.0,
+      "tenure_evaluation": 1.0,
+      "student_feedback_anxiety": 0.0,
+      "ai_displacement": 0.0,
+      "public_presentation": 0.0,
+      "contract_renewal": 0.0,
+      "performance_review": 1.0,
+      "peer_review_harshness": 1.0,
+      "technical_failure": 0.0,
+      "post_leave_isolation": 1.0,
+      "course_cancellation_unrecognized": 0.0,
+      "social_isolation": 0.0,
+      "mentorship_loss": 0.0,
+      "meeting_disengagement": 0.0,
+      "supervision_unrecognized": 0.0,
+      "remote_isolation": 1.0,
+      "community_loss": 1.0,
+      "student_impact": 0.0,
+      "research_success": 1.0,
+      "teaching_innovation": 0.0,
+      "peer_recognition": 1.0,
+      "mentorship_milestone": 1.0,
+      "resource_improvement": 1.0,
+      "student_creativity": 1.0,
+      "interdisciplinary_growth": 0.0,
+      "scheduling_imposition": 0.0,
+      "resource_denial": 0.0,
+      "resource_inequity": 0.0,
+      "mandatory_training_redundant": 1.0,
+      "retroactive_policy_change": 0.0,
+      "system_migration_unannounced": 1.0,
+      "proposal_dismissed": 1.0,
+      "cv_padding": 0.0,
+      "student_exploitation": 0.0,
+      "peer_review_conflict_of_interest": 0.0,
+      "institutional_hypocrisy": 0.0,
+      "effort_shirking": 0.0,
+      "misconduct_grant_shielding": 0.0,
+      "authorship_unfairness": 0.0,
+      "admitting_struggle_risk": 1.0,
+      "single_complaint_anxiety": 0.0,
+      "grant_renewal_anxiety": 0.0,
+      "career_pivot_anxiety": 1.0,
+      "course_cut_anxiety": 0.0,
+      "disclosure_anxiety": 1.0,
+      "bias_anxiety": 1.0,
+      "grant_rejection_unacknowledged": 1.0,
+      "exclusion_drift": 1.0,
+      "relocation_unsupported": 1.0,
+      "remote_teaching_loneliness": 0.0,
+      "legacy_unrecognized": 0.0,
+      "collaborator_loss": 1.0,
+      "invisibility": 0.0,
+      "cross_department_impact": 0.0,
+      "student_publication_pride": 1.0,
+      "informal_community_joy": 0.0,
+      "experiment_success": 1.0,
+      "student_nomination": 1.0,
       "return_welcome": 0.0,
       "breakthrough_moment": 0.0
     }

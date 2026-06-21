@@ -2,13 +2,16 @@
   "n": 75,
   "mode": "template",
   "mean_sim_generic": 0.023020258744695828,
-  "mean_sim_personalized": 0.055374767791390035,
-  "paired_ttest": {
-    "t": 8.727953275733029,
-    "p": 5.433590061425915e-13
+  "mean_sim_personalized_oracle": 0.055374767791390035,
+  "oracle_vs_generic": {
+    "paired_ttest": {
+      "t": 8.727953275733029,
+      "p": 5.433590061425915e-13
+    },
+    "wilcoxon": {
+      "stat": 329.0,
+      "p": 3.6841232904016676e-07
+    }
   },
-  "wilcoxon": {
-    "stat": 329.0,
-    "p": 3.6841232904016676e-07
-  }
+  "e2e_skipped_reason": "results/exp2_predictions.csv not found or has no 'llm_fewshot_pred' column. Run experiments/exp2_domain_shift.py --use_llm first to enable the end-to-end (predicted-emotion) comparison."
 }

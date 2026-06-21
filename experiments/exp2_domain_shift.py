@@ -3,12 +3,16 @@ Experiment 2: domain-shift test on faculty vignettes.
 
 There is no public, labeled dataset of higher-education faculty emotions
 (checked before writing this repo). So instead of pretending one exists,
-this experiment uses a small set of original illustrative vignettes
-(data/vignettes/faculty_vignettes.csv): 75 short, first-person statements
-that operationalise stressor categories reported in the existing
+this experiment uses a **researcher-authored scenario set / vignette-based
+stress test** (data/vignettes/faculty_vignettes.csv): 75 short, first-person
+statements that operationalise stressor categories reported in the existing
 qualitative literature on academic-staff burnout and motivation (workload,
 recognition, autonomy/bureaucracy, isolation, evaluation anxiety, etc.),
-each manually labeled with one of the 5 common emotion classes.
+each manually labeled with one of the 5 common emotion classes. Do not
+refer to this as a "faculty emotion dataset" in any write-up - it is a
+constructed scenario set for stress-testing classifiers, not a sample of
+real faculty data. See data/vignettes/vignette_validation_template.csv for
+an optional expert face-validity check on the scenarios themselves.
 
 This gives a 3-point domain-shift ladder for each classifier:
   1) GoEmotions test (in-domain: Reddit comments)
@@ -39,9 +43,11 @@ from src.label_mapping import COMMON_LABELS
 from src.metrics import classification_metrics
 from src.models import (LLMFewShotBaseline, LLMUnavailableError,
                          NRCLexiconBaseline, TfidfBaseline)
+from src.plotting import plot_confusion_matrix
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(REPO_ROOT, "results")
+FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
 VIGNETTES_PATH = os.path.join(REPO_ROOT, "data", "vignettes", "faculty_vignettes.csv")
 
 
@@ -68,6 +74,7 @@ def per_group_accuracy(rows, pred_key, group_key="expected_emotion"):
 def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
         llm_workers=8):
     os.makedirs(RESULTS_DIR, exist_ok=True)
+    os.makedirs(FIGURES_DIR, exist_ok=True)
 
     print("Loading GoEmotions train split (to train the same classifiers as Exp.1) ...")
     train_df = load_goemotions("train")
@@ -110,6 +117,39 @@ def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
             "accuracy_by_emotion": by_emotion,
             "accuracy_by_context_tag": by_category,
         }
+        plot_confusion_matrix(metrics["confusion_matrix"], COMMON_LABELS,
+                               f"{name} - faculty vignettes (near-domain)",
+                               os.path.join(FIGURES_DIR, f"{name}_vignettes_cm.png"))
+
+    # Fair, label-space-matched TF-IDF: tfidf_logreg above is trained on all
+    # 7 GoEmotions classes and can predict "neutral"/"surprise" on vignettes,
+    # which are guaranteed wrong here and inflate its apparent error rate
+    # (see out_of_label_space_rate in the saved metrics). This variant is
+    # the same algorithm trained ONLY on the 5 classes the vignettes use, so
+    # the comparison with nrc_lexicon/llm_fewshot (also restricted to 5
+    # classes) is apples-to-apples.
+    print("\n=== tfidf_logreg_5class (fair comparison) ===")
+    train_5class = train_df[train_df["label"].isin(COMMON_LABELS)].reset_index(drop=True)
+    tfidf5 = TfidfBaseline()
+    tfidf5.fit(train_5class["text"], train_5class["label"])
+    preds5 = tfidf5.predict(vignette_texts)
+    pred_key = "tfidf_logreg_5class_pred"
+    for r, p in zip(vignette_rows, preds5):
+        r[pred_key] = p
+    metrics5 = classification_metrics(vignette_labels, preds5, COMMON_LABELS)
+    by_emotion5 = per_group_accuracy(vignette_rows, pred_key, "expected_emotion")
+    by_category5 = per_group_accuracy(vignette_rows, pred_key, "context_tag")
+    print(f"vignette accuracy={metrics5['accuracy']:.3f} macro_f1={metrics5['macro_f1']:.3f} "
+          f"(n_train={len(train_5class)})")
+    print("accuracy by emotion:", {k: round(v, 2) for k, v in by_emotion5.items()})
+    all_metrics["tfidf_logreg_5class"] = {
+        "overall": metrics5,
+        "accuracy_by_emotion": by_emotion5,
+        "accuracy_by_context_tag": by_category5,
+    }
+    plot_confusion_matrix(metrics5["confusion_matrix"], COMMON_LABELS,
+                           "tfidf_logreg_5class - faculty vignettes (fair, label-matched)",
+                           os.path.join(FIGURES_DIR, "tfidf_logreg_5class_vignettes_cm.png"))
 
     if use_llm:
         print("\n=== llm_fewshot (optional) ===")
@@ -134,6 +174,9 @@ def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
                 "accuracy_by_emotion": by_emotion,
                 "accuracy_by_context_tag": by_category,
             }
+            plot_confusion_matrix(metrics["confusion_matrix"], COMMON_LABELS,
+                                   "llm_fewshot - faculty vignettes (near-domain)",
+                                   os.path.join(FIGURES_DIR, "llm_fewshot_vignettes_cm.png"))
         except LLMUnavailableError as exc:
             print(f"[skipped] llm_fewshot baseline unavailable: {exc}")
             all_metrics["llm_fewshot"] = {"skipped_reason": str(exc)}

@@ -7,9 +7,29 @@ from sklearn.metrics import (accuracy_score, classification_report,
 from sklearn.metrics.pairwise import cosine_similarity
 
 
+def out_of_label_space_rate(y_pred, labels):
+    """Fraction of predictions that are not in the allowed label set.
+
+    Relevant whenever a classifier was trained on a broader label space
+    than the evaluation set uses (e.g. a 7-class GoEmotions model evaluated
+    on ISEAR's 5 classes can predict 'neutral'/'surprise', which are
+    guaranteed wrong there and are NOT visible in a same-label confusion
+    matrix - they just silently disappear from the row sums). A high rate
+    here means part of a low accuracy score is a label-space mismatch
+    artifact, not necessarily worse semantic understanding.
+    """
+    allowed = set(labels)
+    total = len(y_pred)
+    if total == 0:
+        return 0.0
+    outside = sum(1 for p in y_pred if p not in allowed)
+    return outside / total
+
+
 def classification_metrics(y_true, y_pred, labels):
     """Return a dict with accuracy, macro-F1, a full classification report
-    (as text) and the confusion matrix (as a nested list, JSON-friendly)."""
+    (as text), the confusion matrix (as a nested list, JSON-friendly), and
+    the out-of-label-space rate (see out_of_label_space_rate above)."""
     return {
         "accuracy": accuracy_score(y_true, y_pred),
         "macro_f1": f1_score(y_true, y_pred, labels=labels, average="macro",
@@ -19,6 +39,7 @@ def classification_metrics(y_true, y_pred, labels):
         "confusion_matrix": confusion_matrix(y_true, y_pred,
                                               labels=labels).tolist(),
         "labels": labels,
+        "out_of_label_space_rate": out_of_label_space_rate(y_pred, labels),
     }
 
 

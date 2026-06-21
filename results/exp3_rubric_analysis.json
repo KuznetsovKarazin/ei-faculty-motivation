@@ -1,0 +1,93 @@
+{
+  "per_rater": [
+    {
+      "rater": "filled_rater1",
+      "n_rows_rated": 75,
+      "relevance": {
+        "n": 75,
+        "mean_generic": 3.64,
+        "mean_personalized": 3.466666666666667,
+        "paired_ttest_t": -0.9159645246031148,
+        "paired_ttest_p": 0.3626608582197035
+      },
+      "specificity": {
+        "n": 75,
+        "mean_generic": 3.28,
+        "mean_personalized": 3.4,
+        "paired_ttest_t": 0.6486977428539618,
+        "paired_ttest_p": 0.5185418662149571
+      },
+      "appropriateness": {
+        "n": 75,
+        "mean_generic": 3.5733333333333333,
+        "mean_personalized": 3.52,
+        "paired_ttest_t": -0.27431924592411994,
+        "paired_ttest_p": 0.7846036327858233
+      }
+    },
+    {
+      "rater": "filled_rater2",
+      "n_rows_rated": 75,
+      "relevance": {
+        "n": 75,
+        "mean_generic": 3.546666666666667,
+        "mean_personalized": 3.52,
+        "paired_ttest_t": -0.15329554350438312,
+        "paired_ttest_p": 0.8785824723988925
+      },
+      "specificity": {
+        "n": 75,
+        "mean_generic": 3.44,
+        "mean_personalized": 3.6533333333333333,
+        "paired_ttest_t": 1.1512216639008874,
+        "paired_ttest_p": 0.2533472212089736
+      },
+      "appropriateness": {
+        "n": 75,
+        "mean_generic": 3.453333333333333,
+        "mean_personalized": 3.64,
+        "paired_ttest_t": 1.0441256804429402,
+        "paired_ttest_p": 0.2998261774553151
+      }
+    }
+  ],
+  "pooled": {
+    "rater": "POOLED (all raters)",
+    "n_rows_rated": 150,
+    "relevance": {
+      "n": 150,
+      "mean_generic": 3.5933333333333333,
+      "mean_personalized": 3.493333333333333,
+      "paired_ttest_t": -0.7798482322260675,
+      "paired_ttest_p": 0.4367172140724715
+    },
+    "specificity": {
+      "n": 150,
+      "mean_generic": 3.36,
+      "mean_personalized": 3.526666666666667,
+      "paired_ttest_t": 1.276791657453427,
+      "paired_ttest_p": 0.2036620628890945
+    },
+    "appropriateness": {
+      "n": 150,
+      "mean_generic": 3.513333333333333,
+      "mean_personalized": 3.58,
+      "paired_ttest_t": 0.5051108653566758,
+      "paired_ttest_p": 0.6142272707321572
+    }
+  },
+  "inter_rater_agreement": {
+    "relevance": {
+      "mean_pairwise_pearson_r": -0.0018974767517536068,
+      "n_common_items": 75
+    },
+    "specificity": {
+      "mean_pairwise_pearson_r": 0.0056766503835082825,
+      "n_common_items": 75
+    },
+    "appropriateness": {
+      "mean_pairwise_pearson_r": -0.2605046299531993,
+      "n_common_items": 75
+    }
+  }
+}

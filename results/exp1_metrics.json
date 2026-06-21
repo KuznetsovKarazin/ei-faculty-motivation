@@ -77,7 +77,8 @@
         "sadness",
         "surprise",
         "neutral"
-      ]
+      ],
+      "out_of_label_space_rate": 0.0
     },
     "cross_dataset": {
       "accuracy": 0.3259083439839328,
@@ -126,7 +127,8 @@
         "fear",
         "joy",
         "sadness"
-      ]
+      ],
+      "out_of_label_space_rate": 0.0
     }
   },
   "tfidf_logreg": {
@@ -207,7 +209,8 @@
         "sadness",
         "surprise",
         "neutral"
-      ]
+      ],
+      "out_of_label_space_rate": 0.0
     },
     "cross_dataset": {
       "accuracy": 0.2590834398393281,
@@ -256,7 +259,61 @@
         "fear",
         "joy",
         "sadness"
-      ]
+      ],
+      "out_of_label_space_rate": 0.4648530217272229
     }
+  },
+  "tfidf_logreg_5class": {
+    "cross_dataset": {
+      "accuracy": 0.38104801898849733,
+      "macro_f1": 0.35777070428111335,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.34      0.33      0.33      1096\n     disgust       0.72      0.09      0.16      1096\n        fear       0.59      0.33      0.43      1095\n         joy       0.46      0.42      0.44      1094\n     sadness       0.30      0.73      0.43      1096\n\n    accuracy                           0.38      5477\n   macro avg       0.48      0.38      0.36      5477\nweighted avg       0.48      0.38      0.36      5477\n",
+      "confusion_matrix": [
+        [
+          361,
+          11,
+          57,
+          129,
+          538
+        ],
+        [
+          299,
+          100,
+          79,
+          183,
+          435
+        ],
+        [
+          168,
+          11,
+          365,
+          103,
+          448
+        ],
+        [
+          112,
+          9,
+          80,
+          461,
+          432
+        ],
+        [
+          124,
+          7,
+          34,
+          131,
+          800
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ],
+      "out_of_label_space_rate": 0.0
+    },
+    "note": "trained only on the 5 ISEAR-shared classes; not evaluated in-domain since GoEmotions test includes surprise/neutral which this variant can never predict"
   }
 }

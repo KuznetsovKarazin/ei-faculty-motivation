@@ -24,10 +24,6 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
 from src.data_loader import load_goemotions, load_isear_common_labels, stratified_sample
 from src.label_mapping import COMMON_LABELS, EKMAN_PLUS_NEUTRAL
 from src.metrics import classification_metrics
@@ -35,28 +31,11 @@ from src.models import (LLMFewShotBaseline, LLMUnavailableError,
                          NRCLexiconBaseline, TfidfBaseline, TransformerBaseline,
                          TransformerUnavailableError)
 
+from src.plotting import plot_confusion_matrix
+
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(REPO_ROOT, "results")
 FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
-
-
-def plot_confusion_matrix(cm, labels, title, out_path):
-    fig, ax = plt.subplots(figsize=(5, 4.5))
-    im = ax.imshow(cm, cmap="Blues")
-    ax.set_xticks(range(len(labels)))
-    ax.set_yticks(range(len(labels)))
-    ax.set_xticklabels(labels, rotation=45, ha="right")
-    ax.set_yticklabels(labels)
-    ax.set_xlabel("Predicted")
-    ax.set_ylabel("True")
-    ax.set_title(title)
-    for i in range(len(labels)):
-        for j in range(len(labels)):
-            ax.text(j, i, cm[i][j], ha="center", va="center", fontsize=8)
-    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=150)
-    plt.close(fig)
 
 
 def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
@@ -110,7 +89,8 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
         metrics_cross = classification_metrics(isear_df["label"], preds_cross,
                                                  COMMON_LABELS)
         print(f"cross-dataset (ISEAR) accuracy={metrics_cross['accuracy']:.3f} "
-              f"macro_f1={metrics_cross['macro_f1']:.3f}")
+              f"macro_f1={metrics_cross['macro_f1']:.3f} "
+              f"out_of_label_space={metrics_cross['out_of_label_space_rate']:.1%}")
 
         all_results[name] = {"in_domain": metrics_in, "cross_dataset": metrics_cross}
 
@@ -120,6 +100,36 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
         plot_confusion_matrix(metrics_cross["confusion_matrix"], COMMON_LABELS,
                                f"{name} - ISEAR (cross-dataset)",
                                os.path.join(FIGURES_DIR, f"{name}_cross_dataset_cm.png"))
+
+    # --- Fair, label-space-matched comparison ---
+    # tfidf_logreg above is trained on all 7 GoEmotions classes, so on
+    # ISEAR (5 classes) it can predict "neutral"/"surprise", which are
+    # guaranteed wrong there and make its cross-dataset score partly an
+    # artifact of label-space mismatch rather than pure generalization
+    # failure (see out_of_label_space_rate above - it's large for
+    # tfidf_logreg). nrc_lexicon and llm_fewshot are explicitly restricted
+    # to the eval set's labels, so they never have this advantage/penalty.
+    # This variant levels the field: same algorithm, trained ONLY on the
+    # 5 classes ISEAR actually uses, so it can never "waste" a prediction.
+    print("\n=== tfidf_logreg_5class (fair comparison, ISEAR-only) ===")
+    train_5class = train_df[train_df["label"].isin(COMMON_LABELS)].reset_index(drop=True)
+    tfidf5 = TfidfBaseline()
+    tfidf5.fit(train_5class["text"], train_5class["label"])
+    preds_cross5 = tfidf5.predict(isear_df["text"])
+    metrics_cross5 = classification_metrics(isear_df["label"], preds_cross5, COMMON_LABELS)
+    print(f"cross-dataset (ISEAR) accuracy={metrics_cross5['accuracy']:.3f} "
+          f"macro_f1={metrics_cross5['macro_f1']:.3f} "
+          f"out_of_label_space={metrics_cross5['out_of_label_space_rate']:.1%} "
+          f"(n_train={len(train_5class)})")
+    all_results["tfidf_logreg_5class"] = {"cross_dataset": metrics_cross5,
+                                           "note": "trained only on the 5 ISEAR-shared "
+                                                    "classes; not evaluated in-domain "
+                                                    "since GoEmotions test includes "
+                                                    "surprise/neutral which this "
+                                                    "variant can never predict"}
+    plot_confusion_matrix(metrics_cross5["confusion_matrix"], COMMON_LABELS,
+                           "tfidf_logreg_5class - ISEAR (fair, label-matched)",
+                           os.path.join(FIGURES_DIR, "tfidf_logreg_5class_cross_dataset_cm.png"))
 
     if use_transformer:
         print("\n=== transformer (optional) ===")
@@ -168,6 +178,12 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
                   f"(n={len(test_sub)})")
             print(f"cross-dataset accuracy={metrics_cross['accuracy']:.3f} "
                   f"(n={len(isear_sub)})")
+            plot_confusion_matrix(metrics_in["confusion_matrix"], EKMAN_PLUS_NEUTRAL,
+                                   "llm_fewshot - GoEmotions test (in-domain)",
+                                   os.path.join(FIGURES_DIR, "llm_fewshot_in_domain_cm.png"))
+            plot_confusion_matrix(metrics_cross["confusion_matrix"], COMMON_LABELS,
+                                   "llm_fewshot - ISEAR (cross-dataset)",
+                                   os.path.join(FIGURES_DIR, "llm_fewshot_cross_dataset_cm.png"))
         except LLMUnavailableError as exc:
             print(f"[skipped] llm_fewshot baseline unavailable: {exc}")
             all_results["llm_fewshot"] = {"skipped_reason": str(exc)}

@@ -1,6 +1,9 @@
 # downloaded third-party datasets (re-downloaded automatically, see src/data_loader.py)
 data/raw/
 
+# ephemeral LLM API response cache (regenerated per user/run)
+results/.llm_cache.json
+
 # python
 __pycache__/
 *.pyc
