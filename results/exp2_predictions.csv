@@ -39,3 +39,38 @@ v037,joy,reinforcement,mentorship_milestone,Mentoring my first PhD student throu
 v038,joy,reinforcement,resource_improvement,"The new lab equipment finally arrived, and I cannot wait to redesign the practical classes around it.",disgust,joy
 v039,joy,reinforcement,student_creativity,I got genuinely excited reading the creative final projects my students submitted this term.,joy,joy
 v040,joy,reinforcement,interdisciplinary_growth,"After years of trying, our interdisciplinary course proposal was finally approved, and three departments want to join.",disgust,sadness
+v041,anger,autonomy,scheduling_imposition,I was never consulted before my course was moved to a time slot that conflicts with my research commitments.,anger,sadness
+v042,anger,autonomy,resource_denial,The department keeps approving more electives without adding a single additional teaching slot to cover them.,anger,neutral
+v043,anger,autonomy,resource_inequity,"My request for a teaching assistant was denied again, while administrative staff got two new hires this year.",sadness,joy
+v044,anger,autonomy,mandatory_training_redundant,I am required to attend a full day of mandatory training that covers material I already teach myself.,joy,neutral
+v045,anger,autonomy,retroactive_policy_change,The committee changed my course's accreditation requirements after the semester had already started.,anger,neutral
+v046,anger,autonomy,system_migration_unannounced,I had to redo an entire exam bank because IT switched platforms without warning anyone teaching this term.,fear,surprise
+v047,anger,autonomy,proposal_dismissed,Every proposal I submit to improve the lab gets silently shelved without anyone explaining why.,joy,surprise
+v048,disgust,autonomy,cv_padding,It bothers me that some colleagues pad their CVs with conference talks they never actually gave.,anger,sadness
+v049,disgust,autonomy,student_exploitation,Watching a colleague pressure their graduate students to work unpaid weekends under the threat of bad references is hard to ignore.,anger,sadness
+v050,disgust,autonomy,peer_review_conflict_of_interest,I find it troubling how easily some peer reviewers reject papers that compete with their own ongoing research.,anger,neutral
+v051,disgust,autonomy,institutional_hypocrisy,The university happily advertises diversity in its brochures while quietly underfunding the programs that would support it.,joy,neutral
+v052,disgust,autonomy,effort_shirking,Some faculty openly recycle the same lecture slides for a decade and call it efficient teaching.,anger,neutral
+v053,disgust,autonomy,misconduct_grant_shielding,It is unsettling how quickly a misconduct complaint disappeared once the accused brought in a large research grant.,anger,surprise
+v054,disgust,autonomy,authorship_unfairness,I dislike how authorship gets handed out based on seniority rather than who actually did the work.,anger,surprise
+v055,fear,competence,admitting_struggle_risk,I am afraid that admitting I am struggling with the new curriculum will be held against me at review time.,fear,fear
+v056,fear,competence,single_complaint_anxiety,I keep worrying that one negative comment from a student could outweigh years of strong evaluations.,sadness,neutral
+v057,fear,competence,grant_renewal_anxiety,The thought of my grant renewal being rejected after years of work makes it hard to sleep some nights.,joy,sadness
+v058,fear,competence,career_pivot_anxiety,I am nervous that switching research directions now will make me look unproductive to the tenure committee.,fear,fear
+v059,fear,competence,course_cut_anxiety,"Every time enrollment numbers are mentioned in a meeting, I worry my course might be the one that gets cut.",fear,sadness
+v060,fear,competence,disclosure_anxiety,I am scared that asking for accommodations for my health condition will quietly affect how I am viewed by leadership.,anger,fear
+v061,fear,competence,bias_anxiety,"I worry that my accent or non-native English will be used against me in my next evaluation, even unspoken.",fear,fear
+v062,sadness,relatedness,grant_rejection_unacknowledged,"Nobody from the department reached out after my research grant was rejected, even though everyone knew how much work went into it.",joy,sadness
+v063,sadness,relatedness,exclusion_drift,"I used to be invited to curriculum planning meetings, and now I just hear about decisions after they are made.",anger,sadness
+v064,sadness,relatedness,relocation_unsupported,"It is disheartening that after relocating my whole life for this position, almost no one has asked how the transition has been.",sadness,sadness
+v065,sadness,relatedness,remote_teaching_loneliness,"My online students rarely turn on their cameras, and some days teaching feels like talking to an empty room.",anger,neutral
+v066,sadness,relatedness,legacy_unrecognized,"I quietly stepped down from chairing the committee I built over ten years, and there was no acknowledgment at all.",anger,neutral
+v067,sadness,relatedness,collaborator_loss,"Since my co-author left the university, I have had no one nearby to really discuss ideas with.",anger,neutral
+v068,sadness,relatedness,invisibility,I sometimes wonder if anyone would notice if I stopped showing up to non-mandatory department events.,anger,surprise
+v069,joy,reinforcement,cross_department_impact,A colleague from another department reached out just to say my workshop changed how they teach their own course.,joy,neutral
+v070,joy,reinforcement,student_publication_pride,Seeing my former student's name as first author on a strong publication filled me with quiet pride.,sadness,joy
+v071,joy,reinforcement,informal_community_joy,Our small reading group has turned into one of the most intellectually alive parts of my week.,joy,sadness
+v072,joy,reinforcement,experiment_success,"After months of debugging, the experiment finally worked exactly as the theory predicted, and the whole lab cheered.",disgust,neutral
+v073,joy,reinforcement,student_nomination,"I was unexpectedly nominated by students for a teaching award, and just being nominated meant a lot.",joy,neutral
+v074,joy,reinforcement,return_welcome,"Returning to the classroom after parental leave, I was surprised by how warmly my students welcomed me back.",sadness,surprise
+v075,joy,reinforcement,breakthrough_moment,Watching a once-struggling student finally have that 'click' moment in office hours made the whole semester worth it.,disgust,sadness

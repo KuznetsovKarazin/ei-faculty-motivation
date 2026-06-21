@@ -1,44 +1,44 @@
 {
   "nrc_lexicon": {
     "overall": {
-      "accuracy": 0.4,
-      "macro_f1": 0.38173297966401415,
-      "report": "              precision    recall  f1-score   support\n\n       anger       0.29      0.75      0.41         8\n     disgust       0.50      0.25      0.33         8\n        fear       0.60      0.38      0.46         8\n         joy       0.50      0.50      0.50         8\n     sadness       0.50      0.12      0.20         8\n\n    accuracy                           0.40        40\n   macro avg       0.48      0.40      0.38        40\nweighted avg       0.48      0.40      0.38        40\n",
+      "accuracy": 0.36,
+      "macro_f1": 0.34736969039815346,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.25      0.60      0.35        15\n     disgust       0.33      0.13      0.19        15\n        fear       0.70      0.47      0.56        15\n         joy       0.44      0.47      0.45        15\n     sadness       0.29      0.13      0.18        15\n\n    accuracy                           0.36        75\n   macro avg       0.40      0.36      0.35        75\nweighted avg       0.40      0.36      0.35        75\n",
       "confusion_matrix": [
         [
-          6,
-          0,
-          2,
-          0,
-          0
-        ],
-        [
-          2,
-          2,
+          9,
           0,
           3,
+          2,
           1
         ],
         [
-          5,
-          0,
-          3,
-          0,
-          0
-        ],
-        [
-          2,
+          8,
           2,
           0,
           4,
-          0
+          1
         ],
         [
           6,
           0,
-          0,
+          7,
           1,
           1
+        ],
+        [
+          2,
+          4,
+          0,
+          7,
+          2
+        ],
+        [
+          11,
+          0,
+          0,
+          2,
+          2
         ]
       ],
       "labels": [
@@ -50,11 +50,11 @@
       ]
     },
     "accuracy_by_emotion": {
-      "anger": 0.75,
-      "disgust": 0.25,
-      "fear": 0.375,
-      "sadness": 0.125,
-      "joy": 0.5
+      "anger": 0.6,
+      "disgust": 0.13333333333333333,
+      "fear": 0.4666666666666667,
+      "sadness": 0.13333333333333333,
+      "joy": 0.4666666666666667
     },
     "accuracy_by_context_tag": {
       "decision_making_exclusion": 1.0,
@@ -96,49 +96,84 @@
       "mentorship_milestone": 0.0,
       "resource_improvement": 0.0,
       "student_creativity": 1.0,
-      "interdisciplinary_growth": 0.0
+      "interdisciplinary_growth": 0.0,
+      "scheduling_imposition": 1.0,
+      "resource_denial": 1.0,
+      "resource_inequity": 0.0,
+      "mandatory_training_redundant": 0.0,
+      "retroactive_policy_change": 1.0,
+      "system_migration_unannounced": 0.0,
+      "proposal_dismissed": 0.0,
+      "cv_padding": 0.0,
+      "student_exploitation": 0.0,
+      "peer_review_conflict_of_interest": 0.0,
+      "institutional_hypocrisy": 0.0,
+      "effort_shirking": 0.0,
+      "misconduct_grant_shielding": 0.0,
+      "authorship_unfairness": 0.0,
+      "admitting_struggle_risk": 1.0,
+      "single_complaint_anxiety": 0.0,
+      "grant_renewal_anxiety": 0.0,
+      "career_pivot_anxiety": 1.0,
+      "course_cut_anxiety": 1.0,
+      "disclosure_anxiety": 0.0,
+      "bias_anxiety": 1.0,
+      "grant_rejection_unacknowledged": 0.0,
+      "exclusion_drift": 0.0,
+      "relocation_unsupported": 1.0,
+      "remote_teaching_loneliness": 0.0,
+      "legacy_unrecognized": 0.0,
+      "collaborator_loss": 0.0,
+      "invisibility": 0.0,
+      "cross_department_impact": 1.0,
+      "student_publication_pride": 0.0,
+      "informal_community_joy": 1.0,
+      "experiment_success": 0.0,
+      "student_nomination": 1.0,
+      "return_welcome": 0.0,
+      "breakthrough_moment": 0.0
     }
   },
   "tfidf_logreg": {
     "overall": {
-      "accuracy": 0.225,
-      "macro_f1": 0.2832696715049656,
-      "report": "              precision    recall  f1-score   support\n\n       anger       0.33      0.12      0.18         8\n     disgust       0.00      0.00      0.00         8\n        fear       1.00      0.38      0.55         8\n         joy       0.67      0.50      0.57         8\n     sadness       0.11      0.12      0.12         8\n\n   micro avg       0.41      0.23      0.29        40\n   macro avg       0.42      0.23      0.28        40\nweighted avg       0.42      0.23      0.28        40\n",
+      "accuracy": 0.22666666666666666,
+      "macro_f1": 0.28351029476349165,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.33      0.07      0.11        15\n     disgust       0.00      0.00      0.00        15\n        fear       1.00      0.47      0.64        15\n         joy       0.62      0.33      0.43        15\n     sadness       0.21      0.27      0.24        15\n\n   micro avg       0.45      0.23      0.30        75\n   macro avg       0.43      0.23      0.28        75\nweighted avg       0.43      0.23      0.28        75\n",
       "confusion_matrix": [
         [
           1,
           0,
           0,
-          0,
-          1
+          1,
+          2
         ],
         [
           2,
           0,
           0,
           0,
-          1
-        ],
-        [
-          0,
-          0,
-          3,
-          1,
-          3
-        ],
-        [
-          0,
-          1,
-          0,
-          4,
           3
         ],
         [
           0,
           0,
+          7,
+          1,
+          5
+        ],
+        [
           0,
           1,
-          1
+          0,
+          5,
+          5
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          4
         ]
       ],
       "labels": [
@@ -150,11 +185,11 @@
       ]
     },
     "accuracy_by_emotion": {
-      "anger": 0.125,
+      "anger": 0.06666666666666667,
       "disgust": 0.0,
-      "fear": 0.375,
-      "sadness": 0.125,
-      "joy": 0.5
+      "fear": 0.4666666666666667,
+      "sadness": 0.26666666666666666,
+      "joy": 0.3333333333333333
     },
     "accuracy_by_context_tag": {
       "decision_making_exclusion": 0.0,
@@ -196,10 +231,42 @@
       "mentorship_milestone": 1.0,
       "resource_improvement": 1.0,
       "student_creativity": 1.0,
-      "interdisciplinary_growth": 0.0
+      "interdisciplinary_growth": 0.0,
+      "scheduling_imposition": 0.0,
+      "resource_denial": 0.0,
+      "resource_inequity": 0.0,
+      "mandatory_training_redundant": 0.0,
+      "retroactive_policy_change": 0.0,
+      "system_migration_unannounced": 0.0,
+      "proposal_dismissed": 0.0,
+      "cv_padding": 0.0,
+      "student_exploitation": 0.0,
+      "peer_review_conflict_of_interest": 0.0,
+      "institutional_hypocrisy": 0.0,
+      "effort_shirking": 0.0,
+      "misconduct_grant_shielding": 0.0,
+      "authorship_unfairness": 0.0,
+      "admitting_struggle_risk": 1.0,
+      "single_complaint_anxiety": 0.0,
+      "grant_renewal_anxiety": 0.0,
+      "career_pivot_anxiety": 1.0,
+      "course_cut_anxiety": 0.0,
+      "disclosure_anxiety": 1.0,
+      "bias_anxiety": 1.0,
+      "grant_rejection_unacknowledged": 1.0,
+      "exclusion_drift": 1.0,
+      "relocation_unsupported": 1.0,
+      "remote_teaching_loneliness": 0.0,
+      "legacy_unrecognized": 0.0,
+      "collaborator_loss": 0.0,
+      "invisibility": 0.0,
+      "cross_department_impact": 0.0,
+      "student_publication_pride": 1.0,
+      "informal_community_joy": 0.0,
+      "experiment_success": 0.0,
+      "student_nomination": 0.0,
+      "return_welcome": 0.0,
+      "breakthrough_moment": 0.0
     }
-  },
-  "llm_fewshot": {
-    "skipped_reason": "ANTHROPIC_API_KEY is not set. Set it to use LLMFewShotBaseline, e.g.: export ANTHROPIC_API_KEY=sk-ant-..."
   }
 }

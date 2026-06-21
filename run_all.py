@@ -31,8 +31,12 @@ def main():
                          help="also try the LLM few-shot baseline in Exp.1/Exp.2 "
                               "(needs ANTHROPIC_API_KEY and internet access)")
     parser.add_argument("--llm_sample_size", type=int, default=150,
-                         help="rows per eval set for the LLM baseline in Exp.1 "
-                              "(controls API cost; Exp.2 always uses all 40 vignettes)")
+                         help="target rows PER CLASS for the LLM baseline in Exp.1 "
+                              "(stratified; rare classes use all available rows)")
+    parser.add_argument("--llm_examples_per_label", type=int, default=5,
+                         help="few-shot examples per class shown to the LLM (default: 5)")
+    parser.add_argument("--llm_workers", type=int, default=8,
+                         help="parallel API calls for the LLM baseline (default: 8)")
     parser.add_argument("--llm_interventions", action="store_true",
                          help="use the Anthropic API for Exp.3 personalized "
                               "messages instead of the offline templates "
@@ -44,12 +48,16 @@ def main():
                                             use_transformer=args.use_transformer,
                                             sample_size=args.sample_size,
                                             use_llm=args.use_llm,
-                                            llm_sample_size=args.llm_sample_size)
+                                            llm_sample_size=args.llm_sample_size,
+                                            llm_examples_per_label=args.llm_examples_per_label,
+                                            llm_workers=args.llm_workers)
 
     print("\n##### EXPERIMENT 2: domain shift on faculty vignettes #####")
     exp2_results = exp2_domain_shift.run(quick=args.quick,
                                           sample_size=args.sample_size,
-                                          use_llm=args.use_llm)
+                                          use_llm=args.use_llm,
+                                          llm_examples_per_label=args.llm_examples_per_label,
+                                          llm_workers=args.llm_workers)
 
     print("\n##### EXPERIMENT 3: intervention message quality #####")
     mode = "llm" if args.llm_interventions else "template"

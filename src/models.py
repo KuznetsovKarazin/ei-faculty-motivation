@@ -230,11 +230,13 @@ class LLMFewShotBaseline:
     """
 
     def __init__(self, n_examples_per_label=2, model=None, cache_path=None,
-                 sleep_between_calls=0.0):
+                 sleep_between_calls=0.0, max_workers=8, max_retries=4):
         self.n_examples_per_label = n_examples_per_label
         self.model = model or os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6")
         self.cache_path = cache_path or os.path.join(REPO_ROOT, "results", ".llm_cache.json")
         self.sleep_between_calls = sleep_between_calls
+        self.max_workers = max_workers
+        self.max_retries = max_retries
         self.examples = []  # list of (text, label)
         self._cache = {}
 
@@ -283,10 +285,11 @@ class LLMFewShotBaseline:
         lines.append("Label:")
         return "\n".join(lines)
 
-    def _call_api(self, prompt, api_key, max_retries=5):
+    def _call_api(self, prompt, api_key, max_retries=None):
         import time as _time
         import requests
 
+        max_retries = max_retries or self.max_retries
         for attempt in range(max_retries):
             try:
                 resp = requests.post(
@@ -329,7 +332,9 @@ class LLMFewShotBaseline:
 
     def predict(self, X, labels):
         import hashlib
+        import threading
         import time
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
@@ -340,41 +345,68 @@ class LLMFewShotBaseline:
 
         self._load_cache()
         fallback = "neutral" if "neutral" in labels else sorted(labels)[0]
-        preds = []
-        n_calls = 0
+        X = list(X)
         n_total = len(X)
+
+        # work out which rows are already cached vs need a real API call
+        keys = [hashlib.sha256(f"{self.model}|{sorted(labels)}|{text}".encode("utf-8")).hexdigest()
+                for text in X]
+        preds = [None] * n_total
+        todo = []  # (index, text, key) for rows not yet cached
+        for i, (text, key) in enumerate(zip(X, keys)):
+            if key in self._cache:
+                preds[i] = self._cache[key]
+            else:
+                todo.append((i, text, key))
+
+        if not todo:
+            return preds
+
+        cache_lock = threading.Lock()
+        first_error = []
         t_start = time.time()
-        try:
-            for i, text in enumerate(X):
-                key = hashlib.sha256(
-                    f"{self.model}|{sorted(labels)}|{text}".encode("utf-8")
-                ).hexdigest()
-                if key in self._cache:
-                    pred = self._cache[key]
-                else:
-                    prompt = self._build_prompt(text, labels)
+        completed = [0]
+
+        def _work(item):
+            idx, text, key = item
+            prompt = self._build_prompt(text, labels)
+            raw = self._call_api(prompt, api_key)
+            pred = raw if raw in labels else fallback
+            return idx, key, pred
+
+        print(f"[LLMFewShotBaseline] {len(todo)} new API calls needed "
+              f"({n_total - len(todo)} already cached), "
+              f"{self.max_workers} parallel workers ...")
+
+        with ThreadPoolExecutor(max_workers=self.max_workers) as pool:
+            futures = {pool.submit(_work, item): item for item in todo}
+            try:
+                for fut in as_completed(futures):
+                    idx, text, key = futures[fut]
                     try:
-                        raw = self._call_api(prompt, api_key)
+                        idx, key, pred = fut.result()
                     except Exception as exc:  # noqa: BLE001 - any API/network error
-                        raise LLMUnavailableError(
-                            f"LLM API call failed: {exc}") from exc
-                    pred = raw if raw in labels else fallback
-                    self._cache[key] = pred
-                    n_calls += 1
-                    # save after every new call so a crash never loses progress
-                    self._save_cache()
-                    if self.sleep_between_calls:
-                        time.sleep(self.sleep_between_calls)
-                    if n_calls % 25 == 0:
-                        elapsed = time.time() - t_start
-                        rate = elapsed / n_calls
-                        remaining = (n_total - i - 1) * rate
-                        print(f"[LLMFewShotBaseline] {i + 1}/{n_total} rows "
-                              f"({n_calls} new API calls, {elapsed:.0f}s elapsed, "
-                              f"~{remaining:.0f}s remaining at current rate)")
-                preds.append(pred)
-        finally:
-            if n_calls:
-                self._save_cache()
+                        first_error.append(exc)
+                        for f in futures:
+                            f.cancel()
+                        break
+                    preds[idx] = pred
+                    with cache_lock:
+                        self._cache[key] = pred
+                        completed[0] += 1
+                        if completed[0] % 25 == 0:
+                            self._save_cache()
+                            elapsed = time.time() - t_start
+                            rate = elapsed / completed[0]
+                            remaining = (len(todo) - completed[0]) * rate / self.max_workers
+                            print(f"[LLMFewShotBaseline] {completed[0]}/{len(todo)} done, "
+                                  f"{elapsed:.0f}s elapsed, ~{remaining:.0f}s remaining")
+            finally:
+                with cache_lock:
+                    if completed[0]:
+                        self._save_cache()
+
+        if first_error:
+            raise LLMUnavailableError(f"LLM API call failed: {first_error[0]}") from first_error[0]
         return preds
 

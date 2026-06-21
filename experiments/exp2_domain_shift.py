@@ -4,7 +4,7 @@ Experiment 2: domain-shift test on faculty vignettes.
 There is no public, labeled dataset of higher-education faculty emotions
 (checked before writing this repo). So instead of pretending one exists,
 this experiment uses a small set of original illustrative vignettes
-(data/vignettes/faculty_vignettes.csv): 40 short, first-person statements
+(data/vignettes/faculty_vignettes.csv): 75 short, first-person statements
 that operationalise stressor categories reported in the existing
 qualitative literature on academic-staff burnout and motivation (workload,
 recognition, autonomy/bureaucracy, isolation, evaluation anxiety, etc.),
@@ -15,7 +15,7 @@ This gives a 3-point domain-shift ladder for each classifier:
   2) ISEAR (cross-dataset: self-reported situations, many countries)
   3) Faculty vignettes (near-domain: higher-ed/workplace statements)
 
-IMPORTANT: these 40 vignettes are illustrative examples written by the
+IMPORTANT: these 75 vignettes are illustrative examples written by the
 research team for this feasibility study, not data collected from real
 faculty. Treat Experiment 2 as a domain-shift stress test of the emotion
 classifiers, not as evidence about real faculty populations.
@@ -65,7 +65,8 @@ def per_group_accuracy(rows, pred_key, group_key="expected_emotion"):
     return {g: correct / total for g, (correct, total) in groups.items()}
 
 
-def run(quick=False, sample_size=None, use_llm=False):
+def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
+        llm_workers=8):
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
     print("Loading GoEmotions train split (to train the same classifiers as Exp.1) ...")
@@ -113,7 +114,8 @@ def run(quick=False, sample_size=None, use_llm=False):
     if use_llm:
         print("\n=== llm_fewshot (optional) ===")
         try:
-            lmodel = LLMFewShotBaseline()
+            lmodel = LLMFewShotBaseline(n_examples_per_label=llm_examples_per_label,
+                                         max_workers=llm_workers)
             lmodel.fit(train_df["text"], train_df["label"])
             preds = lmodel.predict(vignette_texts, COMMON_LABELS)
 
@@ -160,6 +162,10 @@ if __name__ == "__main__":
     parser.add_argument("--sample_size", type=int, default=None)
     parser.add_argument("--use_llm", action="store_true",
                          help="also try the optional LLM few-shot baseline on all "
-                              "40 vignettes (needs ANTHROPIC_API_KEY and internet)")
+                              "75 vignettes (needs ANTHROPIC_API_KEY and internet)")
+    parser.add_argument("--llm_examples_per_label", type=int, default=5)
+    parser.add_argument("--llm_workers", type=int, default=8)
     args = parser.parse_args()
-    run(quick=args.quick, sample_size=args.sample_size, use_llm=args.use_llm)
+    run(quick=args.quick, sample_size=args.sample_size, use_llm=args.use_llm,
+        llm_examples_per_label=args.llm_examples_per_label,
+        llm_workers=args.llm_workers)

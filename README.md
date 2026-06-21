@@ -66,7 +66,7 @@ No public, labeled dataset of real higher-education faculty emotions exists
 ├── data/
 │   ├── raw/                 # downloaded datasets (gitignored, auto-fetched)
 │   ├── lexicon/              # vendored NRC Emotion Lexicon (see its README)
-│   └── vignettes/             # ORIGINAL: 40 illustrative faculty vignettes
+│   └── vignettes/             # ORIGINAL: 75 illustrative faculty vignettes
 │       ├── faculty_vignettes.csv
 │       └── need_descriptions.csv
 ├── src/
@@ -107,7 +107,7 @@ python run_all.py --use_transformer   # also fine-tune a transformer in Exp.1
                                         # Hugging Face Hub)
 python run_all.py --use_llm           # also try an LLM few-shot classifier
                                         # in Exp.1 (subsampled) and Exp.2
-                                        # (full 40 vignettes); needs
+                                        # (full 75 vignettes); needs
                                         # ANTHROPIC_API_KEY and costs real
                                         # API calls (cached on disk, see
                                         # results/.llm_cache.json)
@@ -115,6 +115,21 @@ python run_all.py --use_llm           # also try an LLM few-shot classifier
 
 Each experiment can also be run on its own, e.g. `python
 experiments/exp1_classification.py --quick`.
+
+**Cost/time estimate for `--use_llm` at the default settings** (150/class
+stratified sample × 7 classes in Exp.1 in-domain, ×5 classes cross-dataset,
++ 75 vignettes in Exp.2; 5 few-shot examples/class ≈ 1,730 API calls,
+≈1.7M input tokens total):
+
+| model | est. cost | est. time (8 parallel workers) |
+|---|:---:|:---:|
+| `claude-sonnet-4-6` (default) | ≈ $5 | ≈ 6-7 min |
+| `claude-haiku-4-5-20251001` (set via `ANTHROPIC_MODEL`) | ≈ $1.5-2 | ≈ 4-5 min |
+
+These are estimates from token-count math, not a live invoice — check your
+actual usage in the console. Lower `--llm_sample_size` or
+`--llm_examples_per_label` to spend less; results are cached, so a
+re-run after an interruption only pays for the calls not yet completed.
 
 Datasets are downloaded automatically on first run from public GitHub
 mirrors and cached in `data/raw/` (≈4 MB total). If your machine has no
@@ -130,7 +145,7 @@ test split) and cross-dataset on ISEAR (Scherer & Wallbott), restricted to
 the 5 labels shared with GoEmotions (anger, disgust, fear, joy, sadness).
 
 **Experiment 2 — domain shift on faculty vignettes.** Applies the same
-trained classifiers to 40 original, illustrative faculty vignettes
+trained classifiers to 75 original, illustrative faculty vignettes
 (`data/vignettes/faculty_vignettes.csv`), each one operationalizing a
 stressor category reported in the qualitative literature on academic-staff
 burnout/motivation (workload, recognition, autonomy/bureaucracy, isolation,
@@ -146,12 +161,15 @@ exports a blank rubric (`results/exp3_rubric_template.csv`) for optional
 human expert scoring.
 
 **Optional 4th classifier (`--use_llm`) — LLM few-shot.** Instead of
-keyword/n-gram matching, classifies via an LLM API call with a few labeled
-in-context examples per class. Skipped automatically without
-`ANTHROPIC_API_KEY`. Costs one API call per *predicted* example (responses
-are cached in `results/.llm_cache.json`), so Exp.1 evaluates it on a
-subsample (`--llm_sample_size`, default 150) rather than the full test
-sets, while Exp.2 always runs it on the full 40 vignettes.
+keyword/n-gram matching, classifies via an LLM API call with 5 labeled
+in-context examples per class (`--llm_examples_per_label`). Skipped
+automatically without `ANTHROPIC_API_KEY`. Costs one API call per
+*predicted* example (responses are cached in `results/.llm_cache.json`,
+calls run in parallel via `--llm_workers`, default 8), so Exp.1 evaluates
+it on a **stratified** sample (`--llm_sample_size`, default 150 rows per
+class — not a flat random sample, so rare classes like `disgust`/`fear` in
+GoEmotions are not left with only 2-3 examples) rather than the full test
+sets, while Exp.2 always runs it on the full 75 vignettes.
 
 ## 8. Results (full run, no subsampling)
 
@@ -191,7 +209,7 @@ the word-count vote. Neither failure mode is really about model capacity —
 both are about the (mismatched) training distribution.
 
 Intervention message relevance (`exp3`, TF-IDF similarity to the target
-need description, n = 40 vignettes):
+need description, n = 75 vignettes):
 
 | message type | mean similarity |
 |---|:---:|

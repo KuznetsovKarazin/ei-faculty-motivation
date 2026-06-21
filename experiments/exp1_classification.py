@@ -13,7 +13,8 @@ Usage:
     python experiments/exp1_classification.py
     python experiments/exp1_classification.py --quick
     python experiments/exp1_classification.py --use_transformer
-    python experiments/exp1_classification.py --use_llm --llm_sample_size 150
+    python experiments/exp1_classification.py --use_llm --llm_sample_size 150 \\
+        --llm_examples_per_label 5 --llm_workers 8
 """
 
 import argparse
@@ -27,7 +28,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from src.data_loader import load_goemotions, load_isear_common_labels
+from src.data_loader import load_goemotions, load_isear_common_labels, stratified_sample
 from src.label_mapping import COMMON_LABELS, EKMAN_PLUS_NEUTRAL
 from src.metrics import classification_metrics
 from src.models import (LLMFewShotBaseline, LLMUnavailableError,
@@ -59,7 +60,7 @@ def plot_confusion_matrix(cm, labels, title, out_path):
 
 
 def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
-        llm_sample_size=150):
+        llm_sample_size=150, llm_examples_per_label=5, llm_workers=8):
     os.makedirs(RESULTS_DIR, exist_ok=True)
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
@@ -142,16 +143,16 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
     if use_llm:
         print("\n=== llm_fewshot (optional) ===")
         try:
-            lmodel = LLMFewShotBaseline()
+            lmodel = LLMFewShotBaseline(n_examples_per_label=llm_examples_per_label,
+                                         max_workers=llm_workers)
             lmodel.fit(train_df["text"], train_df["label"])
 
-            test_sub = test_df.sample(n=min(llm_sample_size, len(test_df)),
-                                       random_state=42)
-            isear_sub = isear_df.sample(n=min(llm_sample_size, len(isear_df)),
-                                         random_state=42)
-            print(f"(LLM calls cost money/time: evaluating on a subsample of "
-                  f"{len(test_sub)} + {len(isear_sub)} rows, not the full sets. "
+            print(f"(LLM calls cost money/time: evaluating on up to "
+                  f"{llm_sample_size} rows PER CLASS, not the full sets. "
+                  "Rare classes use all available rows instead. "
                   "Increase --llm_sample_size for a larger, more reliable estimate.)")
+            test_sub = stratified_sample(test_df, "label", llm_sample_size)
+            isear_sub = stratified_sample(isear_df, "label", llm_sample_size)
 
             preds_in = lmodel.predict(test_sub["text"], EKMAN_PLUS_NEUTRAL)
             metrics_in = classification_metrics(test_sub["label"], preds_in,
@@ -192,9 +193,19 @@ if __name__ == "__main__":
                          help="also try the optional LLM few-shot baseline "
                               "(needs ANTHROPIC_API_KEY and internet access)")
     parser.add_argument("--llm_sample_size", type=int, default=150,
-                         help="number of rows to evaluate the LLM baseline on "
-                              "per eval set, to control API cost (default: 150)")
+                         help="target rows PER CLASS to evaluate the LLM baseline "
+                              "on (stratified sample; rare classes use all their "
+                              "rows if fewer than this). Controls API cost. "
+                              "Default: 150/class.")
+    parser.add_argument("--llm_examples_per_label", type=int, default=5,
+                         help="number of in-context few-shot examples per class "
+                              "shown to the LLM (default: 5)")
+    parser.add_argument("--llm_workers", type=int, default=8,
+                         help="number of parallel API calls for the LLM baseline "
+                              "(default: 8; lower this if you hit rate limits)")
     args = parser.parse_args()
     run(quick=args.quick, use_transformer=args.use_transformer,
         sample_size=args.sample_size, use_llm=args.use_llm,
-        llm_sample_size=args.llm_sample_size)
+        llm_sample_size=args.llm_sample_size,
+        llm_examples_per_label=args.llm_examples_per_label,
+        llm_workers=args.llm_workers)

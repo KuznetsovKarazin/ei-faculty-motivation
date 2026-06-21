@@ -152,6 +152,26 @@ def load_isear_common_labels():
     return df[df["label"].isin(COMMON_LABELS)].reset_index(drop=True)
 
 
+def stratified_sample(df, label_col, n_per_class, seed=42):
+    """Sample up to n_per_class rows per label, capped by how many rows
+    actually exist for that label (rather than failing or silently using
+    fewer). This matters for rare classes: a flat random sample of a small
+    fraction of a 7-class imbalanced dataset can leave 2-3 examples for the
+    rarest class, which is not enough to estimate per-class accuracy
+    reliably. Returns a new, shuffled DataFrame; also prints how many rows
+    were used per class so under-sized classes are visible, not silent.
+    """
+    parts = []
+    for label, group in df.groupby(label_col):
+        n = min(n_per_class, len(group))
+        parts.append(group.sample(n=n, random_state=seed))
+        if n < n_per_class:
+            print(f"  [stratified_sample] '{label}': only {n} rows available "
+                  f"(asked for {n_per_class}) - using all of them")
+    out = pd.concat(parts).sample(frac=1, random_state=seed).reset_index(drop=True)
+    return out
+
+
 if __name__ == "__main__":
     # Running this file directly just triggers (and verifies) the downloads.
     print("Downloading GoEmotions ...")
