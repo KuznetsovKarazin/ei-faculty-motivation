@@ -198,5 +198,8 @@
       "student_creativity": 1.0,
       "interdisciplinary_growth": 0.0
     }
+  },
+  "llm_fewshot": {
+    "skipped_reason": "ANTHROPIC_API_KEY is not set. Set it to use LLMFewShotBaseline, e.g.: export ANTHROPIC_API_KEY=sk-ant-..."
   }
 }

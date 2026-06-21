@@ -283,26 +283,49 @@ class LLMFewShotBaseline:
         lines.append("Label:")
         return "\n".join(lines)
 
-    def _call_api(self, prompt, api_key):
+    def _call_api(self, prompt, api_key, max_retries=5):
+        import time as _time
         import requests
-        resp = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": api_key,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": self.model,
-                "max_tokens": 10,
-                "messages": [{"role": "user", "content": prompt}],
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        text = "".join(b["text"] for b in data["content"] if b["type"] == "text")
-        return text.strip().lower()
+
+        for attempt in range(max_retries):
+            try:
+                resp = requests.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": api_key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json",
+                    },
+                    json={
+                        "model": self.model,
+                        "max_tokens": 10,
+                        "messages": [{"role": "user", "content": prompt}],
+                    },
+                    timeout=30,
+                )
+            except requests.RequestException:
+                if attempt == max_retries - 1:
+                    raise
+                _time.sleep(2 ** attempt)
+                continue
+
+            # rate limit (429) or transient server error (5xx): back off and retry
+            if resp.status_code == 429 or resp.status_code >= 500:
+                if attempt == max_retries - 1:
+                    resp.raise_for_status()
+                retry_after = resp.headers.get("retry-after")
+                wait = float(retry_after) if retry_after else float(2 ** attempt)
+                print(f"[LLMFewShotBaseline] status {resp.status_code}, "
+                      f"retrying in {wait:.0f}s (attempt {attempt + 1}/{max_retries}) ...")
+                _time.sleep(wait)
+                continue
+
+            resp.raise_for_status()
+            data = resp.json()
+            text = "".join(b["text"] for b in data["content"] if b["type"] == "text")
+            return text.strip().lower()
+
+        raise RuntimeError(f"Exceeded {max_retries} retries calling the Anthropic API")
 
     def predict(self, X, labels):
         import hashlib
@@ -319,25 +342,39 @@ class LLMFewShotBaseline:
         fallback = "neutral" if "neutral" in labels else sorted(labels)[0]
         preds = []
         n_calls = 0
-        for text in X:
-            key = hashlib.sha256(
-                f"{self.model}|{sorted(labels)}|{text}".encode("utf-8")
-            ).hexdigest()
-            if key in self._cache:
-                pred = self._cache[key]
-            else:
-                prompt = self._build_prompt(text, labels)
-                try:
-                    raw = self._call_api(prompt, api_key)
-                except Exception as exc:  # noqa: BLE001 - any API/network error
-                    raise LLMUnavailableError(f"LLM API call failed: {exc}") from exc
-                pred = raw if raw in labels else fallback
-                self._cache[key] = pred
-                n_calls += 1
-                if self.sleep_between_calls:
-                    time.sleep(self.sleep_between_calls)
-            preds.append(pred)
-        if n_calls:
-            self._save_cache()
+        n_total = len(X)
+        t_start = time.time()
+        try:
+            for i, text in enumerate(X):
+                key = hashlib.sha256(
+                    f"{self.model}|{sorted(labels)}|{text}".encode("utf-8")
+                ).hexdigest()
+                if key in self._cache:
+                    pred = self._cache[key]
+                else:
+                    prompt = self._build_prompt(text, labels)
+                    try:
+                        raw = self._call_api(prompt, api_key)
+                    except Exception as exc:  # noqa: BLE001 - any API/network error
+                        raise LLMUnavailableError(
+                            f"LLM API call failed: {exc}") from exc
+                    pred = raw if raw in labels else fallback
+                    self._cache[key] = pred
+                    n_calls += 1
+                    # save after every new call so a crash never loses progress
+                    self._save_cache()
+                    if self.sleep_between_calls:
+                        time.sleep(self.sleep_between_calls)
+                    if n_calls % 25 == 0:
+                        elapsed = time.time() - t_start
+                        rate = elapsed / n_calls
+                        remaining = (n_total - i - 1) * rate
+                        print(f"[LLMFewShotBaseline] {i + 1}/{n_total} rows "
+                              f"({n_calls} new API calls, {elapsed:.0f}s elapsed, "
+                              f"~{remaining:.0f}s remaining at current rate)")
+                preds.append(pred)
+        finally:
+            if n_calls:
+                self._save_cache()
         return preds
 
