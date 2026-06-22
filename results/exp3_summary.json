@@ -7,7 +7,8 @@
   "levels": [
     "generic",
     "emotion_only",
-    "need_only"
+    "need_only",
+    "full_context"
   ],
   "mode": "template",
   "oracle": {
@@ -15,22 +16,30 @@
     "mean_similarity": {
       "generic": 0.022888682691156192,
       "emotion_only": 0.0267431587265474,
-      "need_only": 0.054055303162312274
+      "need_only": 0.054055303162312274,
+      "full_context": 0.04545090956566308
     },
     "staircase_comparisons": {
       "generic_vs_emotion_only": {
-        "paired_ttest_p": 0.26862592747667097,
+        "paired_ttest_p": 0.2686259274766713,
         "wilcoxon_p": 0.07564582174342196,
         "mean_diff": 0.00385447603539121,
         "cohens_d": 0.12870370128303113,
         "value_added": "n.s."
       },
       "emotion_only_vs_need_only": {
-        "paired_ttest_p": 9.55426273088319e-06,
+        "paired_ttest_p": 9.554262730883179e-06,
         "wilcoxon_p": 5.405358820799184e-06,
         "mean_diff": 0.027312144435764872,
         "cohens_d": 0.5490399708875309,
         "value_added": "++"
+      },
+      "need_only_vs_full_context": {
+        "paired_ttest_p": 0.08317952802556379,
+        "wilcoxon_p": 0.06157870888988933,
+        "mean_diff": -0.008604393596649197,
+        "cohens_d": -0.20279664712598416,
+        "value_added": "n.s."
       }
     }
   },
@@ -39,12 +48,13 @@
     "mean_similarity": {
       "generic": 0.022888682691156192,
       "emotion_only": 0.03133570066070235,
-      "need_only": 0.04912644052128321
+      "need_only": 0.04912644052128321,
+      "full_context": 0.046060713397688816
     },
     "staircase_comparisons": {
       "generic_vs_emotion_only": {
-        "paired_ttest_p": 0.013453216694947498,
-        "wilcoxon_p": 0.004984093000376275,
+        "paired_ttest_p": 0.013453216694947508,
+        "wilcoxon_p": 0.004984093000376276,
         "mean_diff": 0.008447017969546156,
         "cohens_d": 0.29240137043142544,
         "value_added": "+"
@@ -55,6 +65,13 @@
         "mean_diff": 0.017790739860580863,
         "cohens_d": 0.3325658194787356,
         "value_added": "+"
+      },
+      "need_only_vs_full_context": {
+        "paired_ttest_p": 0.5185173475292844,
+        "wilcoxon_p": 0.3312384080806037,
+        "mean_diff": -0.003065727123594396,
+        "cohens_d": -0.0749095673093782,
+        "value_added": "n.s."
       }
     }
   }
