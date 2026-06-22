@@ -166,12 +166,20 @@ def run(mode="template", skip_full_context=False, rubric_sample_size=25):
         # staircase comparisons: each level vs the previous one
         staircase = {}
         for a, b in zip(levels[:-1], levels[1:]):
-            va = [r[f"sim_{a}"] for r in cond_rows]
-            vb = [r[f"sim_{b}"] for r in cond_rows]
+            va = np.array([r[f"sim_{a}"] for r in cond_rows])
+            vb = np.array([r[f"sim_{b}"] for r in cond_rows])
+            diff = vb - va
             t_stat, t_p = stats.ttest_rel(vb, va)
             w_stat, w_p = stats.wilcoxon(vb, va)
+            # Cohen's d for paired samples: mean difference / SD of the
+            # differences. This is the actual number behind a "+/++/+++"
+            # value-added table - report it instead of asserting it.
+            d = float(np.mean(diff) / np.std(diff, ddof=1)) if np.std(diff, ddof=1) > 0 else 0.0
+            value_added = "n.s." if t_p >= 0.05 else (
+                "+" if abs(d) < 0.5 else "++" if abs(d) < 0.8 else "+++")
             staircase[f"{a}_vs_{b}"] = {"paired_ttest_p": t_p, "wilcoxon_p": w_p,
-                                          "mean_diff": means[b] - means[a]}
+                                          "mean_diff": means[b] - means[a],
+                                          "cohens_d": d, "value_added": value_added}
         cond_summary["staircase_comparisons"] = staircase
         summary[cond] = cond_summary
 
@@ -182,9 +190,10 @@ def run(mode="template", skip_full_context=False, rubric_sample_size=25):
         print(f"\n=== {cond} (n={len(cond_rows)}) ===")
         for lvl in levels:
             print(f"  {lvl:15s} mean_sim={means[lvl]:.3f}")
+        print(f"  {'layer step':30s} {'diff':>8s} {'Cohens_d':>9s} {'p':>8s}  value_added")
         for pair, st in staircase.items():
-            print(f"  {pair:30s} diff={st['mean_diff']:+.3f}  "
-                  f"paired t-test p={st['paired_ttest_p']:.4f}")
+            print(f"  {pair:30s} {st['mean_diff']:+8.3f} {st['cohens_d']:+9.2f} "
+                  f"{st['paired_ttest_p']:8.4f}  {st['value_added']}")
 
     summary_path = os.path.join(RESULTS_DIR, "exp3_summary.json")
     with open(summary_path, "w", encoding="utf-8") as f:

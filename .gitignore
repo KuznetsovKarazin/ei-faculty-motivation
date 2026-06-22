@@ -4,6 +4,11 @@ data/raw/
 # ephemeral LLM API response cache (regenerated per user/run)
 results/.llm_cache.json
 
+# output of exp3b_rubric_analysis.py - only meaningful once real human
+# ratings have been collected and analyzed; must never be a stale/test
+# artifact left over from development (this happened once - see git log)
+results/exp3_rubric_analysis.json
+
 # python
 __pycache__/
 *.pyc

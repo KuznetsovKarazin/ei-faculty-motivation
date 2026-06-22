@@ -102,10 +102,16 @@ def analyze(deanon, rater_name):
                      if a in item and b in item and dim in item[a] and dim in item[b]]
             if len(pairs) < 2:
                 continue
-            va, vb = [p[0] for p in pairs], [p[1] for p in pairs]
+            va, vb = np.array([p[0] for p in pairs]), np.array([p[1] for p in pairs])
+            diff = vb - va
             t_stat, t_p = stats.ttest_rel(vb, va)
-            staircase[f"{a}_vs_{b}"][dim] = {"n": len(pairs), "mean_diff": float(np.mean(vb) - np.mean(va)),
-                                               "paired_ttest_p": float(t_p)}
+            sd = np.std(diff, ddof=1)
+            d = float(np.mean(diff) / sd) if sd > 0 else 0.0
+            value_added = "n.s." if t_p >= 0.05 else (
+                "+" if abs(d) < 0.5 else "++" if abs(d) < 0.8 else "+++")
+            staircase[f"{a}_vs_{b}"][dim] = {"n": len(pairs), "mean_diff": float(np.mean(diff)),
+                                               "paired_ttest_p": float(t_p), "cohens_d": d,
+                                               "value_added": value_added}
     result["staircase"] = staircase
     return result
 
@@ -119,7 +125,8 @@ def print_result(result):
     for pair, dims in result["staircase"].items():
         for dim, st in dims.items():
             print(f"  {pair:30s} [{dim}] diff={st['mean_diff']:+.2f} "
-                  f"p={st['paired_ttest_p']:.4f} (n={st['n']})")
+                  f"d={st['cohens_d']:+.2f} p={st['paired_ttest_p']:.4f} "
+                  f"(n={st['n']})  value_added={st['value_added']}")
 
 
 def main():
