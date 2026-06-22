@@ -216,6 +216,14 @@ class TransformerBaseline:
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
+        if self.device == "cpu":
+            import os as _os
+            n_cores = _os.cpu_count() or 1
+            torch.set_num_threads(n_cores)
+            print(f"[TransformerBaseline] CPU mode: using torch.set_num_threads({n_cores}) "
+                  f"- intra-op matmul/attention math is parallelized across all "
+                  f"{n_cores} logical cores automatically (this is PyTorch's "
+                  "built-in CPU parallelism, not something this code adds on top of).")
         print(f"[TransformerBaseline] training {self.model_name} on {len(X)} examples, "
               f"{self.num_epochs} epoch(s), device={self.device}")
 
