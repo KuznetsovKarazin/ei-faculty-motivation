@@ -1,24 +1,29 @@
 """
-Analyze one or more FILLED-IN copies of the blind rubric produced by
-experiment 3 (results/exp3_rubric_blind.csv).
+Analyze one or more FILLED-IN copies of the blind multi-level rubric
+produced by experiments/exp3_intervention_quality.py
+(results/exp3_rubric_blind.csv).
 
 Workflow:
   1. Run experiments/exp3_intervention_quality.py - it writes
-     results/exp3_rubric_blind.csv (give copies of this to 1-5 raters,
-     who do NOT see results/exp3_rubric_key.csv) and
-     results/exp3_rubric_key.csv (keep this yourself).
-  2. Each rater fills in the *_1_5 columns (1-5 scale) for message_a and
-     message_b, not knowing which one is generic vs personalized, and
+     results/exp3_rubric_blind.csv (give copies to 1-5 raters, who do NOT
+     see results/exp3_rubric_key.csv) and results/exp3_rubric_key.csv
+     (keep this yourself - it maps each anonymous slot a/b/c/(d) back to
+     the actual personalization level: generic / emotion_only / need_only
+     / full_context).
+  2. Each rater fills in the *_1_5 columns (1-5 scale) for every slot,
+     across 4 dimensions (relevance, specificity, sdt_alignment,
+     motivational_usefulness), not knowing which slot is which level, and
      saves their own copy, e.g. results/filled_rater1.csv.
-  3. Run this script pointing at all filled copies plus the key:
+  3. Run this script:
 
      python experiments/exp3b_rubric_analysis.py \\
          --rubrics results/filled_rater1.csv results/filled_rater2.csv \\
          --key results/exp3_rubric_key.csv
 
-This de-anonymizes each rater's A/B scores back into generic/personalized
-using the key, reports per-rater and pooled paired comparisons, and (if 2+
-raters are given) a simple inter-rater agreement check.
+This de-anonymizes each rater's slot scores back into level names using
+the key, reports per-rater and pooled means per level/dimension, the
+staircase comparisons (generic -> emotion_only -> need_only ->
+full_context), and (with 2+ raters) a simple inter-rater agreement check.
 """
 
 import argparse
@@ -26,6 +31,7 @@ import csv
 import json
 import os
 import sys
+from collections import defaultdict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -35,7 +41,7 @@ from scipy import stats
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(REPO_ROOT, "results")
 
-DIMENSIONS = ["relevance", "specificity", "appropriateness"]
+DIMENSIONS = ["relevance", "specificity", "sdt_alignment", "motivational_usefulness"]
 
 
 def load_csv_as_dicts(path):
@@ -44,125 +50,140 @@ def load_csv_as_dicts(path):
 
 
 def deanonymize(rubric_rows, key_rows):
-    """Return list of dicts with generic_<dim> / personalized_<dim> per id,
-    using the key to know which of A/B was the personalized message."""
-    key = {r["id"]: r["a_is_personalized"] in ("True", "true", "1") for r in key_rows}
-    out = []
+    """Return {id: {level: {dimension: score}}} using the key to map each
+    anonymous slot back to its actual personalization level."""
+    key = {r["id"]: r for r in key_rows}
+    slot_cols = [c for c in rubric_rows[0].keys() if c.startswith("slot_")] if False else None
+    out = {}
     for r in rubric_rows:
-        a_is_personalized = key.get(r["id"])
-        if a_is_personalized is None:
-            continue  # row not in key, skip rather than crash
-        row = {"id": r["id"]}
-        for dim in DIMENSIONS:
-            val_a = r.get(f"{dim}_a_1_5", "")
-            val_b = r.get(f"{dim}_b_1_5", "")
-            if val_a == "" or val_b == "":
-                continue  # rater left this blank; skip this dimension for this row
-            val_a, val_b = float(val_a), float(val_b)
-            if a_is_personalized:
-                row[f"personalized_{dim}"] = val_a
-                row[f"generic_{dim}"] = val_b
-            else:
-                row[f"personalized_{dim}"] = val_b
-                row[f"generic_{dim}"] = val_a
-        out.append(row)
+        k = key.get(r["id"])
+        if k is None:
+            continue
+        levels_here = {}
+        for slot_key, level in k.items():
+            if not slot_key.startswith("slot_"):
+                continue
+            slot = slot_key.split("_", 1)[1]  # "a", "b", ...
+            dims = {}
+            for dim in DIMENSIONS:
+                val = r.get(f"{dim}_{slot}_1_5", "")
+                if val != "":
+                    dims[dim] = float(val)
+            if dims:
+                levels_here[level] = dims
+        if levels_here:
+            out[r["id"]] = levels_here
     return out
 
 
-def analyze_rater(rows, rater_name):
-    result = {"rater": rater_name, "n_rows_rated": len(rows)}
-    for dim in DIMENSIONS:
-        gen_key, per_key = f"generic_{dim}", f"personalized_{dim}"
-        pairs = [(r[gen_key], r[per_key]) for r in rows if gen_key in r and per_key in r]
-        if not pairs:
-            result[dim] = {"n": 0, "note": "no rows rated on this dimension"}
-            continue
-        gen_vals = [p[0] for p in pairs]
-        per_vals = [p[1] for p in pairs]
-        t_stat, t_p = stats.ttest_rel(per_vals, gen_vals) if len(pairs) > 1 else (float("nan"),) * 2
-        result[dim] = {
-            "n": len(pairs),
-            "mean_generic": float(np.mean(gen_vals)),
-            "mean_personalized": float(np.mean(per_vals)),
-            "paired_ttest_t": t_stat, "paired_ttest_p": t_p,
-        }
+def analyze(deanon, rater_name):
+    """deanon: {id: {level: {dim: score}}}. Returns per-level-per-dim means
+    and staircase paired comparisons (generic -> emotion_only -> need_only
+    -> full_context, using whichever of those levels are present)."""
+    by_level_dim = defaultdict(lambda: defaultdict(list))
+    for item in deanon.values():
+        for level, dims in item.items():
+            for dim, val in dims.items():
+                by_level_dim[level][dim].append(val)
+
+    levels_present = [lvl for lvl in ["generic", "emotion_only", "need_only", "full_context"]
+                       if lvl in by_level_dim]
+
+    result = {"rater": rater_name, "n_items": len(deanon), "levels": levels_present, "means": {}}
+    for lvl in levels_present:
+        result["means"][lvl] = {dim: float(np.mean(vals)) for dim, vals in by_level_dim[lvl].items()}
+
+    # staircase: need paired (same-id) values per dimension
+    staircase = {}
+    for a, b in zip(levels_present[:-1], levels_present[1:]):
+        staircase[f"{a}_vs_{b}"] = {}
+        for dim in DIMENSIONS:
+            pairs = [(item[a][dim], item[b][dim]) for item in deanon.values()
+                     if a in item and b in item and dim in item[a] and dim in item[b]]
+            if len(pairs) < 2:
+                continue
+            va, vb = [p[0] for p in pairs], [p[1] for p in pairs]
+            t_stat, t_p = stats.ttest_rel(vb, va)
+            staircase[f"{a}_vs_{b}"][dim] = {"n": len(pairs), "mean_diff": float(np.mean(vb) - np.mean(va)),
+                                               "paired_ttest_p": float(t_p)}
+    result["staircase"] = staircase
     return result
+
+
+def print_result(result):
+    print(f"\n=== {result['rater']} (n={result['n_items']} items, "
+          f"levels={result['levels']}) ===")
+    for lvl in result["levels"]:
+        means = result["means"].get(lvl, {})
+        print(f"  {lvl:15s} " + "  ".join(f"{d}={means.get(d, float('nan')):.2f}" for d in DIMENSIONS))
+    for pair, dims in result["staircase"].items():
+        for dim, st in dims.items():
+            print(f"  {pair:30s} [{dim}] diff={st['mean_diff']:+.2f} "
+                  f"p={st['paired_ttest_p']:.4f} (n={st['n']})")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--rubrics", nargs="+", required=True,
-                         help="one or more filled-in copies of exp3_rubric_blind.csv, "
-                              "one per rater")
+                         help="one or more filled-in copies of exp3_rubric_blind.csv")
     parser.add_argument("--key", default=os.path.join(RESULTS_DIR, "exp3_rubric_key.csv"))
     parser.add_argument("--out", default=os.path.join(RESULTS_DIR, "exp3_rubric_analysis.json"))
     args = parser.parse_args()
 
     key_rows = load_csv_as_dicts(args.key)
-    all_rater_results = []
-    all_deanon_rows = []  # for the pooled analysis across raters
+    per_rater_results = []
+    pooled_deanon = {}
 
     for path in args.rubrics:
         rubric_rows = load_csv_as_dicts(path)
         deanon = deanonymize(rubric_rows, key_rows)
-        all_deanon_rows.extend(deanon)
         rater_name = os.path.splitext(os.path.basename(path))[0]
-        result = analyze_rater(deanon, rater_name)
-        all_rater_results.append(result)
-        print(f"\n=== {rater_name} (n={result['n_rows_rated']} rows) ===")
-        for dim in DIMENSIONS:
-            d = result[dim]
-            if d.get("n", 0) == 0:
-                print(f"  {dim}: no ratings")
-                continue
-            print(f"  {dim}: generic={d['mean_generic']:.2f}  "
-                  f"personalized={d['mean_personalized']:.2f}  "
-                  f"paired t-test p={d['paired_ttest_p']:.4f}  (n={d['n']})")
+        result = analyze(deanon, rater_name)
+        per_rater_results.append(result)
+        print_result(result)
+        for item_id, item in deanon.items():
+            pooled_deanon.setdefault(f"{rater_name}::{item_id}", item)
 
-    pooled = analyze_rater(all_deanon_rows, "POOLED (all raters)")
-    print(f"\n=== POOLED across {len(args.rubrics)} rater(s) ===")
-    for dim in DIMENSIONS:
-        d = pooled[dim]
-        if d.get("n", 0) == 0:
-            continue
-        print(f"  {dim}: generic={d['mean_generic']:.2f}  "
-              f"personalized={d['mean_personalized']:.2f}  "
-              f"paired t-test p={d['paired_ttest_p']:.4f}  (n={d['n']})")
+    pooled = analyze(pooled_deanon, f"POOLED ({len(args.rubrics)} rater(s))")
+    print_result(pooled)
 
     agreement = None
     if len(args.rubrics) >= 2:
-        # simple inter-rater agreement: correlate each rater's
-        # (personalized - generic) delta, per dimension, across raters
-        print("\n=== Inter-rater agreement (Pearson r of per-item deltas) ===")
-        agreement = {}
-        by_rater_deanon = []
+        print("\n=== Inter-rater agreement (Pearson r on common items, per level/dim) ===")
+        per_rater_deanon = []
         for path in args.rubrics:
             rubric_rows = load_csv_as_dicts(path)
-            by_rater_deanon.append({r["id"]: r for r in deanonymize(rubric_rows, key_rows)})
-        for dim in DIMENSIONS:
-            deltas = []
-            for rater_map in by_rater_deanon:
-                d = {rid: r[f"personalized_{dim}"] - r[f"generic_{dim}"]
-                     for rid, r in rater_map.items()
-                     if f"personalized_{dim}" in r and f"generic_{dim}" in r}
-                deltas.append(d)
-            common_ids = set.intersection(*[set(d.keys()) for d in deltas]) if deltas else set()
-            if len(common_ids) < 3:
-                print(f"  {dim}: not enough common rated items to compute agreement")
-                continue
-            ids_sorted = sorted(common_ids)
-            series = [[d[i] for i in ids_sorted] for d in deltas]
-            corrs = []
-            for i in range(len(series)):
-                for j in range(i + 1, len(series)):
-                    r_val, _ = stats.pearsonr(series[i], series[j])
-                    corrs.append(r_val)
-            mean_corr = float(np.mean(corrs)) if corrs else float("nan")
-            agreement[dim] = {"mean_pairwise_pearson_r": mean_corr, "n_common_items": len(common_ids)}
-            print(f"  {dim}: mean pairwise r={mean_corr:.2f} (n_common_items={len(common_ids)})")
+            per_rater_deanon.append(deanonymize(rubric_rows, key_rows))
+        common_ids = set.intersection(*[set(d.keys()) for d in per_rater_deanon])
+        agreement = {}
+        if len(common_ids) >= 3:
+            levels_present = pooled["levels"]
+            for lvl in levels_present:
+                agreement[lvl] = {}
+                for dim in DIMENSIONS:
+                    series = []
+                    ok = True
+                    for d in per_rater_deanon:
+                        vals = [d[i].get(lvl, {}).get(dim) for i in sorted(common_ids)]
+                        if any(v is None for v in vals):
+                            ok = False
+                            break
+                        series.append(vals)
+                    if not ok or len(series) < 2:
+                        continue
+                    corrs = []
+                    for i in range(len(series)):
+                        for j in range(i + 1, len(series)):
+                            r_val, _ = stats.pearsonr(series[i], series[j])
+                            corrs.append(r_val)
+                    mean_r = float(np.mean(corrs)) if corrs else float("nan")
+                    agreement[lvl][dim] = mean_r
+                    print(f"  {lvl:15s} [{dim}] mean pairwise r={mean_r:.2f}")
+        else:
+            print("  not enough common rated items to compute agreement")
 
     with open(args.out, "w", encoding="utf-8") as f:
-        json.dump({"per_rater": all_rater_results, "pooled": pooled,
+        json.dump({"per_rater": per_rater_results, "pooled": pooled,
                    "inter_rater_agreement": agreement}, f, indent=2)
     print(f"\nSaved full analysis to {args.out}")
 

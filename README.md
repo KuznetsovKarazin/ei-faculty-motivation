@@ -81,7 +81,7 @@ No public, labeled dataset of real higher-education faculty emotions exists
 ├── experiments/
 │   ├── exp1_classification.py    # accuracy + cross-dataset generalization + fair tfidf_5class
 │   ├── exp2_domain_shift.py       # near-domain test on the vignette scenario set
-│   ├── exp3_intervention_quality.py  # generic vs personalized, oracle + end-to-end, blind rubric export
+│   ├── exp3_intervention_quality.py  # 4-level ablation, oracle + end-to-end, blind rubric export
 │   └── exp3b_rubric_analysis.py   # analyzes filled-in blind rubrics from human raters
 ├── results/                      # metrics, predictions, figures (committed)
 ├── run_all.py                    # runs Exp.1 -> Exp.2 -> Exp.3 + domain-shift summary chart
@@ -180,26 +180,50 @@ face-validity check on the scenarios themselves is in
 fill in: is each scenario plausible, and is the assigned emotion label
 appropriate).
 
-**Experiment 3 — intervention message quality, two conditions.**
-- *Oracle*: personalization is driven by the **gold** emotion label - an
-  upper bound ("if detection were perfect, does personalization help?").
-- *End-to-end*: personalization is driven by the **predicted** emotion from
-  `llm_fewshot` (read from `results/exp2_predictions.csv`, so run Exp.2
-  with `--use_llm` first). This shows how classification errors actually
-  propagate into the final message, and reports a `need_match_rate` (how
-  often a wrong emotion prediction still happens to map to the right SDT
-  need - some confusions, like anger/disgust, share a need category and
-  so don't hurt the downstream message).
+**Experiment 3 — intervention message quality, as a 4-level ablation, in
+two conditions.**
 
-Both conditions are scored against the canonical description of the
-*gold* need (TF-IDF cosine similarity), with paired t-test / Wilcoxon
-signed-rank tests. Also exports a **blind** A/B rubric
+Four personalization levels, so a paper can show what each layer actually
+adds instead of just "generic vs personalized":
+1. `generic` — same message regardless of anything detected.
+2. `emotion_only` — acknowledges the raw detected emotion, no theory.
+3. `need_only` — routes through the SDT need (what earlier versions of
+   this repo called simply "personalized").
+4. `full_context` — SDT need **and** the specific situation (vignette text
+   + a broad stressor category, e.g. workload overload / lack of
+   recognition / loss of autonomy / administrative pressure / student
+   disengagement / isolation / research-teaching conflict / positive
+   engagement — see `data/vignettes/faculty_vignettes.csv`'s
+   `stressor_category` column). This level always uses the LLM (no fixed
+   template could cover 75 different specific situations) and is skipped
+   for *all* vignettes with one clear message if no `ANTHROPIC_API_KEY` is
+   set, rather than partially generating it.
+
+Two conditions, same as before:
+- *Oracle*: emotion = the **gold** label - an upper bound ("if detection
+  were perfect, does personalization help?").
+- *End-to-end*: emotion = the **predicted** label from `llm_fewshot` (read
+  from `results/exp2_predictions.csv`, so run Exp.2 with `--use_llm`
+  first). Shows how classification errors actually propagate into the
+  final message, and reports a `need_match_rate` (how often a wrong
+  emotion prediction still happens to map to the right SDT need - e.g.
+  `anger`/`disgust` share a need category, so confusing them doesn't
+  necessarily hurt the message).
+
+All levels in both conditions are scored against the canonical
+description of the *gold* need (TF-IDF cosine similarity) with **staircase**
+paired comparisons (generic→emotion_only→need_only→full_context), not just
+one generic-vs-personalized number - this is what actually answers "what
+adds value: detecting emotion at all, mapping to SDT, or full context?"
+Also exports a **blind**, multi-slot rubric
 (`results/exp3_rubric_blind.csv` + a separate, rater-hidden
-`exp3_rubric_key.csv`) for human expert scoring without raters knowing
-which message is generic vs personalized - analyze filled-in copies with
+`exp3_rubric_key.csv`) for human expert scoring on 4 dimensions
+(`relevance`, `specificity`, `sdt_alignment`, `motivational_usefulness`),
+on a stratified subsample (`--rubric_sample_size`, default 25 vignettes)
+to keep rater workload reasonable - analyze filled-in copies with
 `experiments/exp3b_rubric_analysis.py`. The automatic TF-IDF similarity
-score is a cheap proxy and is structurally biased toward the personalized
-templates (they share vocabulary with the need descriptions by
+score is a cheap proxy and is structurally biased toward the more specific
+levels (they share more vocabulary with the need descriptions by
 construction) - **the blind human rubric, not the automatic score alone,
 is the result to lead with in a paper.**
 
@@ -292,45 +316,57 @@ disapproval (favoritism, authorship unfairness, conflicts of interest)
 rather than visceral disgust - a known hard boundary in emotion theory
 (moral disgust vs. anger/moral outrage), not an implementation bug.
 
-### 8.4 Intervention message quality (Experiment 3)
+### 8.4 Intervention message quality (Experiment 3) — 4-level ablation
 
-Oracle condition (personalization driven by the gold emotion label), TF-IDF
-similarity to the target need description, n = 75:
+Oracle condition (n = 75), TF-IDF similarity to the target need description,
+staircase comparisons (each level vs. the previous one):
 
-| message type | mean similarity |
-|---|:---:|
-| generic (baseline) | 0.023 |
-| personalized (oracle emotion) | 0.055 |
+| level | mean similarity | vs. previous level |
+|---|:---:|---|
+| `generic` (baseline) | 0.023 | — |
+| `emotion_only` | 0.027 | +0.004, paired t-test p = 0.27 (**not significant**) |
+| `need_only` | 0.057 | +0.031, paired t-test p < 0.0001 |
+| `full_context` | *(needs `ANTHROPIC_API_KEY`, see 6)* | — |
 
-paired t-test p < 0.0001; Wilcoxon p < 0.0001. See
-`results/figures/exp3_generic_vs_oracle.png`.
+See `results/figures/exp3_ablation_oracle.png`. This decomposition answers
+a sharper question than "personalization works": **simply detecting and
+naming the emotion (`emotion_only`) adds nothing measurable on its own** -
+the real jump happens specifically at the SDT-need-routing step
+(`need_only`). That is a more defensible, more specific claim for a paper
+than "personalized beats generic": it is the theory-driven routing, not
+emotion detection per se, that is doing the work. Run with
+`ANTHROPIC_API_KEY` set to also get the `full_context` point and see
+whether situational specificity adds a further step on top of that.
 
-**Caveat that matters more than the p-value**: TF-IDF similarity to a need
+**Caveat that matters more than the p-values**: TF-IDF similarity to a need
 description is a weak, automatable proxy that is structurally biased
-toward the personalized templates (they share vocabulary with the need
-descriptions by construction - a generic message could never score well
-on this metric even if a human found it equally appropriate). Treat this
-as a sanity check that the routing logic does what it says, not as
-evidence of real motivational benefit. **The blind human rubric
-(`results/exp3_rubric_blind.csv`, analyzed with
+toward the more specific levels (they share more vocabulary with the need
+descriptions by construction - `generic` could never score well on this
+metric even if a human found it equally appropriate). Treat this as a
+sanity check that the routing logic does what it says, not as evidence of
+real motivational benefit. **The blind human rubric
+(`results/exp3_rubric_blind.csv`, 4 dimensions - relevance, specificity,
+sdt_alignment, motivational_usefulness - analyzed with
 `experiments/exp3b_rubric_analysis.py`) is the result a paper should lead
-with**; this repo ships the rubric and analysis code, but the actual human
-ratings still need to be collected (3-5 raters, ~10-15 minutes each).
+with**; this repo ships the rubric and analysis code on a stratified
+25-vignette subsample, but the actual human ratings still need to be
+collected (3-5 raters, ~15-20 minutes each for 25 vignettes × up to 4
+slots × 4 dimensions).
 
 ### 8.5 End-to-end condition (run Exp.2 with `--use_llm` first to enable)
 
 Once `results/exp2_predictions.csv` contains `llm_fewshot` predictions,
-Experiment 3 automatically also reports an **end-to-end** condition:
-messages generated from the *predicted* (not gold) emotion, still scored
-against the *true* underlying need. This is the number that actually
-demonstrates the full pipeline, not just the personalization layer in
-isolation. It also reports `need_match_rate`: how often a wrong emotion
-prediction still happens to map to the correct SDT need (e.g. `anger` and
-`disgust` both map to `autonomy`, so confusing them doesn't necessarily
-hurt the message). Run it and report both the oracle-vs-end-to-end gap and
-end-to-end-vs-generic significance - if personalization still beats
-generic end-to-end despite real classifier noise, that is a much stronger
-claim than the oracle number alone.
+Experiment 3 automatically also runs the full 4-level staircase in an
+**end-to-end** condition: messages generated from the *predicted* (not
+gold) emotion, still scored against the *true* underlying need. This is
+the number that actually demonstrates the full pipeline, not just the
+personalization layer in isolation. It also reports `need_match_rate`: how
+often a wrong emotion prediction still happens to map to the correct SDT
+need (e.g. `anger` and `disgust` both map to `autonomy`, so confusing them
+doesn't necessarily hurt the message). Compare the oracle and end-to-end
+staircases side by side - if the `need_only` jump survives end-to-end
+despite real classifier noise, that is a much stronger claim than the
+oracle number alone.
 ## 9. On model choice: why not just use a fancier architecture?
 
 It is tempting to read "40% accuracy" as "use a better model" and reach for

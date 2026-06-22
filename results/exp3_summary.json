@@ -1,17 +1,32 @@
 {
-  "n": 75,
+  "n_vignettes": 75,
+  "conditions": [
+    "oracle"
+  ],
+  "levels": [
+    "generic",
+    "emotion_only",
+    "need_only"
+  ],
   "mode": "template",
-  "mean_sim_generic": 0.023020258744695828,
-  "mean_sim_personalized_oracle": 0.055374767791390035,
-  "oracle_vs_generic": {
-    "paired_ttest": {
-      "t": 8.727953275733029,
-      "p": 5.433590061425915e-13
+  "oracle": {
+    "n": 75,
+    "mean_similarity": {
+      "generic": 0.023020258744695828,
+      "emotion_only": 0.02689584447416013,
+      "need_only": 0.057458601657764084
     },
-    "wilcoxon": {
-      "stat": 329.0,
-      "p": 3.6841232904016676e-07
+    "staircase_comparisons": {
+      "generic_vs_emotion_only": {
+        "paired_ttest_p": 0.27012996209185114,
+        "wilcoxon_p": 0.08965519841728703,
+        "mean_diff": 0.0038755857294643023
+      },
+      "emotion_only_vs_need_only": {
+        "paired_ttest_p": 3.872596766810593e-07,
+        "wilcoxon_p": 1.9888249470073106e-06,
+        "mean_diff": 0.030562757183603954
+      }
     }
-  },
-  "e2e_skipped_reason": "results/exp2_predictions.csv not found or has no 'llm_fewshot_pred' column. Run experiments/exp2_domain_shift.py --use_llm first to enable the end-to-end (predicted-emotion) comparison."
+  }
 }

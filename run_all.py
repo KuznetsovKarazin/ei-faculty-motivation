@@ -38,9 +38,13 @@ def main():
     parser.add_argument("--llm_workers", type=int, default=8,
                          help="parallel API calls for the LLM baseline (default: 8)")
     parser.add_argument("--llm_interventions", action="store_true",
-                         help="use the Anthropic API for Exp.3 personalized "
-                              "messages instead of the offline templates "
+                         help="use the Anthropic API for the emotion_only/need_only "
+                              "Exp.3 levels too, not just full_context "
                               "(needs ANTHROPIC_API_KEY)")
+    parser.add_argument("--skip_full_context", action="store_true",
+                         help="skip the full_context level in Exp.3 (saves API calls)")
+    parser.add_argument("--rubric_sample_size", type=int, default=25,
+                         help="vignettes included in the blind Exp.3 rubric (default: 25)")
     args = parser.parse_args()
 
     print("\n##### EXPERIMENT 1: emotion classification + cross-dataset #####")
@@ -59,9 +63,11 @@ def main():
                                           llm_examples_per_label=args.llm_examples_per_label,
                                           llm_workers=args.llm_workers)
 
-    print("\n##### EXPERIMENT 3: intervention message quality #####")
+    print("\n##### EXPERIMENT 3: intervention message quality (4-level ablation) #####")
     mode = "llm" if args.llm_interventions else "template"
-    exp3_results = exp3_intervention_quality.run(mode=mode)
+    exp3_results = exp3_intervention_quality.run(
+        mode=mode, skip_full_context=args.skip_full_context,
+        rubric_sample_size=args.rubric_sample_size)
 
     print("\n##### SUMMARY #####")
     accuracies_for_plot = {
@@ -92,15 +98,12 @@ def main():
     plot_domain_shift_ladder(accuracies_for_plot, ladder_path)
     print(f"\nSaved domain-shift summary chart to {ladder_path}")
 
-    print(f"\nintervention relevance (TF-IDF sim to need), oracle emotion: "
-          f"generic={exp3_results['mean_sim_generic']:.3f}  "
-          f"personalized={exp3_results['mean_sim_personalized_oracle']:.3f}  "
-          f"(paired t-test p={exp3_results['oracle_vs_generic']['paired_ttest']['p']:.4f})")
-    if "mean_sim_personalized_e2e" in exp3_results:
-        print(f"intervention relevance, end-to-end (predicted emotion): "
-              f"personalized={exp3_results['mean_sim_personalized_e2e']:.3f}  "
-              f"need_match_rate={exp3_results['need_match_rate']:.1%}  "
-              f"(vs generic, paired t-test p={exp3_results['e2e_vs_generic']['paired_ttest']['p']:.4f})")
+    for cond in exp3_results["conditions"]:
+        means = exp3_results[cond]["mean_similarity"]
+        print(f"\nintervention relevance ({cond}), TF-IDF sim to need: "
+              + "  ".join(f"{lvl}={v:.3f}" for lvl, v in means.items()))
+        for pair, st in exp3_results[cond]["staircase_comparisons"].items():
+            print(f"  {pair}: diff={st['mean_diff']:+.3f}  p={st['paired_ttest_p']:.4f}")
     print("\nAll detailed results are saved under results/")
 
 

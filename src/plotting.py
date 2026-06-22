@@ -74,6 +74,32 @@ def plot_domain_shift_ladder(accuracies, out_path, title="Accuracy across domain
     plt.close(fig)
 
 
+def plot_ablation_comparison(means, sems, out_path,
+                              title="Message relevance by personalization level",
+                              ylabel="TF-IDF similarity to target need"):
+    """Bar chart with error bars comparing 4 (or more) ablation levels.
+
+    means/sems: dicts {level_name: value}, same keys, in display order.
+    """
+    levels = list(means.keys())
+    vals = [means[k] for k in levels]
+    errs = [sems.get(k, 0) for k in levels]
+
+    fig, ax = plt.subplots(figsize=(6.5, 4.5))
+    bars = ax.bar(levels, vals, yerr=errs, capsize=4,
+                   color=["#adb5bd", "#74c69d", "#52b788", "#2d6a4f"][:len(levels)])
+    for b, v in zip(bars, vals):
+        ax.text(b.get_x() + b.get_width() / 2, v + max(errs, default=0) + 0.002,
+                f"{v:.3f}", ha="center", va="bottom", fontsize=9)
+    ax.set_ylabel(ylabel)
+    ax.set_title(title, fontsize=11)
+    ax.set_xticks(range(len(levels)))
+    ax.set_xticklabels(levels, rotation=15, ha="right")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+
+
 def plot_paired_comparison(values_a, values_b, label_a, label_b, out_path,
                             title="Generic vs personalized message relevance",
                             ylabel="TF-IDF similarity to target need"):
