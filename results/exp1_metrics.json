@@ -317,7 +317,191 @@
     "note": "trained only on the 5 ISEAR-shared classes; not evaluated in-domain since GoEmotions test includes surprise/neutral which this variant can never predict"
   },
   "transformer": {
-    "skipped_reason": "Could not load pretrained model 'distilbert-base-uncased'. This usually means there is no internet access to the Hugging Face Hub from this machine. Run this experiment with --use_transformer on a machine with normal internet access."
+    "in_domain": {
+      "accuracy": 0.6932461873638345,
+      "macro_f1": 0.6270434195075223,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.54      0.50      0.52       520\n     disgust       0.54      0.50      0.52        76\n        fear       0.64      0.71      0.67        77\n         joy       0.79      0.84      0.81      1603\n     sadness       0.64      0.57      0.60       259\n    surprise       0.56      0.59      0.58       449\n     neutral       0.69      0.67      0.68      1606\n\n    accuracy                           0.69      4590\n   macro avg       0.63      0.63      0.63      4590\nweighted avg       0.69      0.69      0.69      4590\n",
+      "confusion_matrix": [
+        [
+          262,
+          12,
+          4,
+          45,
+          21,
+          32,
+          144
+        ],
+        [
+          20,
+          38,
+          3,
+          5,
+          1,
+          2,
+          7
+        ],
+        [
+          3,
+          1,
+          55,
+          2,
+          6,
+          3,
+          7
+        ],
+        [
+          40,
+          1,
+          4,
+          1343,
+          13,
+          28,
+          174
+        ],
+        [
+          24,
+          3,
+          6,
+          19,
+          148,
+          16,
+          43
+        ],
+        [
+          20,
+          4,
+          5,
+          48,
+          6,
+          266,
+          100
+        ],
+        [
+          118,
+          11,
+          9,
+          235,
+          36,
+          127,
+          1070
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness",
+        "surprise",
+        "neutral"
+      ],
+      "out_of_label_space_rate": 0.0
+    },
+    "cross_dataset": {
+      "accuracy": 0.3383238999452255,
+      "macro_f1": 0.45903833274746075,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.71      0.30      0.42      1096\n     disgust       0.95      0.21      0.34      1096\n        fear       0.91      0.35      0.50      1095\n         joy       0.80      0.40      0.53      1094\n     sadness       0.57      0.44      0.50      1096\n\n   micro avg       0.74      0.34      0.46      5477\n   macro avg       0.79      0.34      0.46      5477\nweighted avg       0.79      0.34      0.46      5477\n",
+      "confusion_matrix": [
+        [
+          332,
+          8,
+          7,
+          29,
+          146
+        ],
+        [
+          86,
+          226,
+          13,
+          23,
+          75
+        ],
+        [
+          21,
+          2,
+          380,
+          14,
+          101
+        ],
+        [
+          4,
+          1,
+          6,
+          434,
+          34
+        ],
+        [
+          24,
+          1,
+          10,
+          41,
+          481
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ],
+      "out_of_label_space_rate": 0.543728318422494
+    },
+    "model_name": "distilbert-base-uncased"
+  },
+  "transformer_5class": {
+    "cross_dataset": {
+      "accuracy": 0.5446412269490597,
+      "macro_f1": 0.5199464225699643,
+      "report": "              precision    recall  f1-score   support\n\n       anger       0.52      0.45      0.48      1096\n     disgust       0.95      0.19      0.32      1096\n        fear       0.84      0.43      0.57      1095\n         joy       0.58      0.86      0.69      1094\n     sadness       0.41      0.79      0.54      1096\n\n    accuracy                           0.54      5477\n   macro avg       0.66      0.54      0.52      5477\nweighted avg       0.66      0.54      0.52      5477\n",
+      "confusion_matrix": [
+        [
+          490,
+          6,
+          19,
+          165,
+          416
+        ],
+        [
+          292,
+          209,
+          45,
+          232,
+          318
+        ],
+        [
+          68,
+          3,
+          470,
+          159,
+          395
+        ],
+        [
+          12,
+          1,
+          13,
+          944,
+          124
+        ],
+        [
+          78,
+          0,
+          11,
+          137,
+          870
+        ]
+      ],
+      "labels": [
+        "anger",
+        "disgust",
+        "fear",
+        "joy",
+        "sadness"
+      ],
+      "out_of_label_space_rate": 0.0
+    },
+    "model_name": "distilbert-base-uncased",
+    "note": "trained only on the 5 ISEAR-shared classes; not evaluated in-domain, same rationale as tfidf_logreg_5class"
   },
   "llm_fewshot": {
     "in_domain": {

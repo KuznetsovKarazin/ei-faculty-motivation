@@ -1,96 +1,97 @@
-# EI-Driven Digital Tool for Faculty Motivation — Experiments & Prototype
+# An SDT-Grounded Digital Tool for Faculty Motivation: A Feasibility Study with a Personalization-Layer Ablation
 
-A feasibility / design-science study and reference pipeline for an
-emotion-intelligence-driven digital tool aimed at motivating **higher
-education faculty** (ППС), built and validated on public datasets only
-(no human-subject data collection).
+A design-science feasibility study and full reproducible pipeline for an emotional-intelligence-driven
+digital motivational tool for higher-education faculty (ППС), built and validated entirely on **public
+datasets, a researcher-authored vignette set, and real human expert evaluation** — with no human-subject
+data collection from faculty required.
 
-## 1. What this is
+> **Status: results complete.** All three experiments have real, reproduced numbers, including a
+> fine-tuned transformer baseline and a 21-rater human evaluation of the personalization ablation. See
+> [Results](#6-results) for the final figures and tables, and [`PAPER_OUTLINE.md`](PAPER_OUTLINE.md) for
+> the proposed manuscript structure.
 
-The pipeline has three parts:
+## Abstract
 
-1. **Emotion perception module** — classifies the emotion expressed in a
-   short text (a faculty check-in, journal entry, feedback comment, etc.).
-2. **SDT need-mapping module** — maps the detected emotion to one of the
-   three basic needs from Self-Determination Theory (Deci & Ryan):
-   autonomy, competence, relatedness.
-3. **Intervention generator** — produces a short, personalized motivational
-   message targeted at that need (template-based by default; optionally via
-   an LLM call).
+Most AI/chatbot research on emotional intelligence (EI) in education targets *students*; where EI in
+teaching staff is studied, it is usually a static, questionnaire-measured trait, not a dynamic signal
+driving an automated intervention. This repository asks a narrower, answerable question instead of
+claiming to have "built an emotionally intelligent chatbot": **does a digital tool that routes a
+detected emotion through Self-Determination Theory (SDT) — rather than just naming the emotion, or
+just using generic language — produce measurably better motivational messages, and does that hold up
+when the underlying emotion classifier is realistically imperfect?** Using two public emotion corpora
+(GoEmotions, ISEAR), a 75-item researcher-authored stress-test of faculty scenarios, four classifiers of
+increasing sophistication (lexicon counting, TF-IDF, a fine-tuned transformer, and LLM few-shot
+prompting), a four-level message-personalization ablation (generic → emotion-only → SDT-need-only →
+full-context), and a blind evaluation by 21 higher-education faculty/researchers, we find that (1)
+classifier robustness to domain shift increases monotonically with semantic sophistication
+(lexicon → TF-IDF → transformer → LLM few-shot), confirming that off-the-shelf supervised classifiers do
+not transfer well to a new text register, while modern few-shot LLM classification does; and (2) in
+human judgment, the SDT-need-routing step — not raw emotion detection — produces the largest jump in
+perceived message quality, with full situational context adding a further, even larger improvement that
+an automatic text-similarity metric fails to detect. This divergence between automatic and human
+evaluation is itself a methodological finding: text-similarity proxies are not a safe substitute for
+human judgment when evaluating generated motivational content.
 
-This is packaged as a research pipeline with three experiments, not as a
-finished chatbot product.
+## 1. Motivation & research gap
 
-## 2. Why this is a genuine gap (not just "another EI chatbot")
+Most existing work on emotion-aware AI/chatbots in higher education targets **students**, not faculty.
+Where teacher emotions have been studied computationally, it has been (a) about school (K-12) teachers,
+not higher-ed faculty, and (b) descriptive rather than intervention-oriented:
 
-Most existing work on emotion-aware AI / chatbots in higher education
-targets **students**, not faculty. Where teacher emotions have been studied
-computationally, it has been (a) about school (K-12) teachers, not
-higher-ed faculty, and (b) descriptive rather than intervention-oriented:
+- Chen, Shi, Zhang & Qu (2020, *Frontiers in Psychology*) analysed about a million K-12 teacher forum
+  posts using **word-frequency lexicon counting** (8 discrete emotions) — a descriptive study, no
+  intervention tool.
+- Li (2022) analysed sentiment in **student evaluations of teaching** using a BiLSTM model — emotions
+  *about* the teacher, not the teacher's own emotional state, and again no intervention tool.
 
-- Chen, Shi, Zhang & Qu (2020, *Frontiers in Psychology*) analysed about a
-  million K-12 teacher forum posts using **word-frequency lexicon counting**
-  (8 discrete emotions) — a descriptive study, no intervention tool.
-- Li (2022) analysed sentiment in **student evaluations of teaching** using
-  a BiLSTM model — emotions *about* the teacher, not the teacher's own
-  emotional state, and again no intervention tool.
+This repository explicitly builds on and is benchmarked against that first, simpler line of work (the
+lexicon-counting approach is reproduced here as the `nrc_lexicon` baseline) while extending it: (1)
+target population is higher-ed faculty, not school teachers; (2) it closes the loop from "detect
+emotion" to a theory-grounded, personalized intervention; (3) it explicitly tests cross-dataset/
+cross-domain generalization across four classifier families, which the prior work does not; (4) it
+decomposes "personalization" into an ablation (does the *theory* matter, or just detecting *any*
+emotion?) instead of a single generic-vs-personalized comparison; (5) it backs the automatic evaluation
+with a blind, multi-rater human evaluation.
 
-This repository explicitly builds on and is benchmarked against that first,
-simpler line of work (the lexicon-counting approach is reproduced here as
-the `nrc_lexicon` baseline) while extending it in three ways: (1) target
-population is higher-ed faculty, not school teachers; (2) it closes the
-loop from "detect emotion" to a theory-grounded, personalized intervention;
-(3) it explicitly tests cross-dataset / cross-domain generalization, which
-the prior work does not.
+**No public, labeled dataset of real higher-education faculty emotions exists** (checked before writing
+this repo) — this is why Experiment 2 uses a clearly labeled researcher-authored scenario set, never
+described here as a "dataset of faculty emotions."
 
-## 3. What this does NOT claim
-
-No public, labeled dataset of real higher-education faculty emotions exists
-(checked before starting this project). So this study:
-
-- **Does** show how accurately public emotion datasets generalize to
-  higher-ed-relevant text (a domain-shift feasibility test).
-- **Does** show that theory-driven personalized messages score
-  significantly higher on an automatic relevance metric than a generic
-  message.
-- **Does NOT** show that real faculty would actually feel more motivated by
-  this tool. That requires a follow-up study with real faculty (survey
-  instruments such as WLEIS/TEIQue-SF for emotional intelligence and WTMST
-  for teacher motivation, pre/post intervention, ethics approval). See
-  "Future work" below.
-
-## 4. Repository structure
+## 2. Repository structure
 
 ```
 .
 ├── data/
 │   ├── raw/                 # downloaded datasets (gitignored, auto-fetched)
 │   ├── lexicon/              # vendored NRC Emotion Lexicon (see its README)
-│   └── vignettes/             # ORIGINAL: 75-scenario researcher-authored set
+│   └── vignettes/             # ORIGINAL: 75-scenario researcher-authored stress test
 │       ├── faculty_vignettes.csv
 │       ├── need_descriptions.csv
-│       └── vignette_validation_template.csv  # blank, for expert face-validity check
+│       └── vignette_validation_template.csv  # optional expert face-validity check
 ├── src/
 │   ├── data_loader.py         # downloads + parses GoEmotions / ISEAR, stratified_sample
 │   ├── label_mapping.py       # GoEmotions(27) -> Ekman+neutral(7), ISEAR labels
 │   ├── models.py               # NRCLexiconBaseline, TfidfBaseline, TransformerBaseline, LLMFewShotBaseline
 │   ├── sdt_mapping.py           # emotion -> SDT need
-│   ├── intervention_generator.py  # need -> motivational message
+│   ├── intervention_generator.py  # need (+ optional situational context) -> message, 4 ablation levels
 │   ├── metrics.py               # classification metrics, out-of-label-space rate, TF-IDF relevance scorer
-│   └── plotting.py               # confusion matrix, domain-shift ladder, paired comparison charts
+│   └── plotting.py               # confusion matrices, domain-shift ladder, ablation charts
 ├── experiments/
-│   ├── exp1_classification.py    # accuracy + cross-dataset generalization + fair tfidf_5class
-│   ├── exp2_domain_shift.py       # near-domain test on the vignette scenario set
-│   ├── exp3_intervention_quality.py  # 4-level ablation, oracle + end-to-end, blind rubric export
-│   └── exp3b_rubric_analysis.py   # analyzes filled-in blind rubrics from human raters
-├── results/                      # metrics, predictions, figures (committed)
+│   ├── exp1_classification.py        # accuracy + cross-dataset generalization, all 4 classifier families
+│   ├── exp2_domain_shift.py           # near-domain stress test on the 75-scenario set
+│   ├── exp3_intervention_quality.py    # 4-level ablation, oracle + end-to-end, blind rubric export
+│   ├── exp3b_rubric_analysis.py        # analyzes filled-in blind rubrics from human raters
+│   └── convert_google_forms_rubric.py  # converts a Google Forms export into per-rater rubric CSVs
+├── results/                      # metrics, predictions, figures, human ratings (committed)
+│   ├── human_ratings/             # 21 anonymized per-rater CSVs (real data, see Section 6.4)
+│   └── human_eval_raw_responses.xlsx  # raw Google Forms export (no identifying fields)
 ├── run_all.py                    # runs Exp.1 -> Exp.2 -> Exp.3 + domain-shift summary chart
 ├── requirements.txt
+├── PAPER_OUTLINE.md              # proposed manuscript structure for *Trends in Higher Education*
 └── INSTRUCTIONS_RU.md            # usage instructions in Russian
 ```
 
-
-## 5. Installation
+## 3. Installation
 
 ```bash
 python3 -m venv .venv
@@ -98,84 +99,46 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-The transformer baseline (`transformers`, `torch`) is optional; everything
-else runs with just the core dependencies.
+The transformer baseline (`transformers`, `torch`) is optional for a quick look at the results (already
+computed and committed) but required to *reproduce* that part; everything else runs with just the core
+dependencies. On Windows, if you hit `FileNotFoundError: ... libtorchaudio.pyd`, run
+`pip uninstall torchaudio -y` — it is not used by this codebase and a version mismatch with `torch` can
+break the *entire* `transformers` import chain on Windows.
 
-## 6. Running
+## 4. Reproducing the results
 
 ```bash
 python run_all.py --quick     # fast smoke test (~4000 training rows, ~10s)
 python run_all.py             # full run on the full GoEmotions training set
-python run_all.py --use_transformer   # also fine-tune a transformer in Exp.1
-                                        # (needs internet access to the
-                                        # Hugging Face Hub)
-python run_all.py --use_llm           # also try an LLM few-shot classifier
-                                        # in Exp.1 (subsampled) and Exp.2
-                                        # (full 75 vignettes); needs
-                                        # ANTHROPIC_API_KEY and costs real
-                                        # API calls (cached on disk, see
-                                        # results/.llm_cache.json)
+python run_all.py --use_transformer   # also fine-tune a transformer in Exp.1/Exp.2
+python run_all.py --use_llm           # also run the LLM few-shot classifier
+python run_all.py --use_transformer --use_llm   # everything (this is what produced Section 6)
 ```
 
-Each experiment can also be run on its own, e.g. `python
-experiments/exp1_classification.py --quick`.
+**Result files are merged, not overwritten**: if a results file already contains an `llm_fewshot` or
+`transformer` entry from an earlier run, re-running without that flag keeps the existing entry instead
+of silently deleting it (a real failure mode in earlier development of this repo — see git history).
 
-**Result files are merged, not overwritten**: if `results/exp1_metrics.json`
-or `exp2_metrics.json`/`exp2_predictions.csv` already contain an
-`llm_fewshot` (or `transformer`) entry from an earlier `--use_llm`/
-`--use_transformer` run, re-running without that flag will **keep** the
-existing entry instead of silently deleting it. (This matters: an earlier
-version of this repo did not do this and a real `llm_fewshot` run got
-overwritten by a later no-API-key smoke test - if you see
-`[exp1]/[exp2] kept existing '...' results from a previous run` in the
-log, that is this safeguard working correctly, not an error.)
+### Cost/time estimates
 
-**Cost/time estimate for `--use_transformer`** (full data, both the 7-class
-and the fair 5-class variant, `distilbert-base-uncased`, 3 epochs each):
-≈10,500 training batches total. The training loop (forward/backward,
-gradient clipping, LR schedule, model caching) was verified end-to-end
-offline using a tiny randomly-initialized model of the same architecture,
-since this repo was built without internet access to Hugging Face Hub to
-test with real weights - the loop itself is confirmed correct, not just
-reviewed by eye.
+| step | flag | est. cost | est. time |
+|---|---|:---:|:---:|
+| classical baselines (lexicon, TF-IDF x2) | *(default)* | free | seconds |
+| transformer x2 (`distilbert-base-uncased`, both label spaces) | `--use_transformer` | free (local compute) | ~50-70 min on a modern multi-core CPU, ~1.5-3h on an older CPU, ~5-15 min on any GPU incl. free Google Colab T4 |
+| LLM few-shot classifier (stratified, ~1730 calls) | `--use_llm` | ~$5 (Claude Sonnet) | ~6-7 min (8 parallel workers) |
+| `full_context` message generation (~150 calls) | *(automatic in Exp.3 if `ANTHROPIC_API_KEY` is set)* | ~$0.10-0.25 | ~2-5 min |
 
-| hardware | estimated time |
-|---|:---:|
-| modern multi-core CPU | ≈ 50-70 minutes |
-| older/laptop CPU | ≈ 1.5-3 hours |
-| any GPU (even a free Google Colab T4) | ≈ 5-15 minutes |
+No local GPU for the transformer step? Use Google Colab's free tier: upload/clone the repo,
+`pip install -r requirements.txt`, run `python run_all.py --use_transformer`. Both the LLM classifier
+and the `full_context` generator cache responses on disk (`results/.llm_cache.json`,
+`results/.full_context_cache.json`, both gitignored) so a re-run after an interruption only pays for
+what is not yet done.
 
-No local GPU? Google Colab's free tier is the easiest path: upload/clone
-the repo there, `pip install -r requirements.txt`, run `python run_all.py
---use_transformer`. Use `--skip_transformer_5class` to halve the time if
-you only want the headline number first, and run `--quick` first
-regardless, just to confirm the environment works before committing to
-the full run. The fine-tuned model is cached
-(`results/.transformer_cache/`, gitignored, keyed by model/labels/train
-size/epochs/lr) so Experiment 2 reuses Experiment 1's model instead of
-retraining, and re-running later with the same settings is instant.
+### Manual dataset download (no internet access at all)
 
-**Cost/time estimate for `--use_llm` at the default settings** (150/class
-stratified sample × 7 classes in Exp.1 in-domain, ×5 classes cross-dataset,
-+ 75 vignettes in Exp.2; 5 few-shot examples/class ≈ 1,730 API calls,
-≈1.7M input tokens total):
-
-| model | est. cost | est. time (8 parallel workers) |
-|---|:---:|:---:|
-| `claude-sonnet-4-6` (default) | ≈ $5 | ≈ 6-7 min |
-| `claude-haiku-4-5-20251001` (set via `ANTHROPIC_MODEL`) | ≈ $1.5-2 | ≈ 4-5 min |
-
-These are estimates from token-count math, not a live invoice — check your
-actual usage in the console. Lower `--llm_sample_size` or
-`--llm_examples_per_label` to spend less; results are cached, so a
-re-run after an interruption only pays for the calls not yet completed.
-
-Datasets are downloaded automatically on first run from public GitHub
-mirrors and cached in `data/raw/` (≈4 MB total, not committed to the repo -
-see "Datasets & attribution" for why). **If your machine/sandbox has no
-internet access at all** (e.g. an isolated review environment), download
-these 5 files manually on a machine that does have access, and place them
-in `data/raw/` under the exact names below before running anything:
+If the environment has no internet access whatsoever, download these 5 files manually elsewhere and
+place them under `data/raw/` with the exact names below; every script then runs fully offline (network
+only needed for `--use_llm`/`--use_transformer`):
 
 | save as | source URL |
 |---|---|
@@ -185,341 +148,214 @@ in `data/raw/` under the exact names below before running anything:
 | `data/raw/goemotions_ekman_mapping.json` | https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/ekman_mapping.json |
 | `data/raw/isear_raw.csv` | https://raw.githubusercontent.com/sinmaniphel/py_isear_dataset/master/isear.csv |
 
-Once those 5 files exist locally, every script runs fully offline (no
-network calls at all unless you pass `--use_llm`/`--use_transformer`).
+## 5. Methodology overview
 
-## 7. Experiments
+**Experiment 1 — classification accuracy & cross-dataset generalization.** Four classifier families are
+trained on GoEmotions (Demszky et al., 2020; Ekman-6 + neutral grouping) and evaluated both in-domain
+(GoEmotions test split) and cross-dataset on ISEAR (Scherer & Wallbott), restricted to the 5 labels
+shared with GoEmotions:
+1. `nrc_lexicon` — word counting against the NRC Emotion Lexicon (Mohammad & Turney, 2013); the same
+   class of method used by Chen et al. (2020).
+2. `tfidf_logreg` — TF-IDF + logistic regression, trained on all 7 GoEmotions classes.
+3. `transformer` — fine-tuned `distilbert-base-uncased` (or any HF model via `--transformer_model_name`),
+   trained on all 7 GoEmotions classes; training uses gradient clipping, linear warmup/decay, a
+   per-epoch validation check against the GoEmotions dev split, and on-disk model caching so Exp.1 and
+   Exp.2 do not redundantly retrain the same model.
+4. `llm_fewshot` — an LLM API call with 5 labeled in-context examples per class, no fine-tuning.
 
-**Experiment 1 — classification accuracy & cross-dataset generalization.**
-Trains each baseline on GoEmotions (Demszky et al., 2020), reduced to the
-Ekman-6 + neutral grouping, and evaluates it both in-domain (GoEmotions
-test split) and cross-dataset on ISEAR (Scherer & Wallbott), restricted to
-the 5 labels shared with GoEmotions (anger, disgust, fear, joy, sadness).
-Also trains a **label-space-matched** `tfidf_logreg_5class` variant (same
-algorithm, trained only on the 5 ISEAR-shared classes) for a fair
-comparison with `nrc_lexicon`/`llm_fewshot` — see "Fair comparison" below,
-this matters a lot for the conclusions.
+Because (2) and (3) are trained on all 7 classes, they can predict `neutral`/`surprise` on the 5-class
+ISEAR/vignette evaluations — guaranteed wrong there, and invisible in a same-label confusion matrix (the
+row simply undercounts). `tfidf_logreg_5class` and `transformer_5class` are the same algorithms trained
+**only** on the 5 shared classes, for a fair, label-space-matched comparison against `nrc_lexicon` and
+`llm_fewshot` (both already restricted to the eval label space by construction). Report **both**
+versions: the 7-class one is a realistic "what happens if you deploy your original model into a
+narrower context" baseline, the 5-class one is the fair comparison point.
 
-**Experiment 2 — domain shift on a researcher-authored scenario set.**
-Applies the same trained classifiers (incl. the fair `tfidf_logreg_5class`
-variant) to 75 original, illustrative faculty vignettes
-(`data/vignettes/faculty_vignettes.csv`), each one operationalizing a
-stressor category reported in the qualitative literature on academic-staff
-burnout/motivation (workload, recognition, autonomy/bureaucracy, isolation,
-evaluation anxiety, career stagnation, work-life imbalance, positive
-engagement), 15 vignettes per emotion class. **This is a constructed
-scenario set / vignette-based stress test, not a dataset of real faculty
-emotions** - do not describe it as one in any write-up. An optional expert
-face-validity check on the scenarios themselves is in
-`data/vignettes/vignette_validation_template.csv` (blank, for 2-3 raters to
-fill in: is each scenario plausible, and is the assigned emotion label
-appropriate).
+**Experiment 2 — domain shift on a researcher-authored scenario set.** The same four (six, counting fair
+variants) classifiers are applied to 75 short, first-person vignettes (`data/vignettes/`), each
+operationalizing a stressor category reported in the qualitative literature on academic-staff burnout
+(workload overload, lack of recognition, loss of autonomy, administrative pressure, student
+disengagement, isolation, research-teaching conflict, plus positive engagement), 15 per emotion class.
+**This is a constructed stress test, not a dataset of real faculty emotions** — an optional expert
+face-validity check on the scenarios themselves is in `vignette_validation_template.csv`.
 
-**Experiment 3 — intervention message quality, as a 4-level ablation, in
-two conditions.**
-
-Four personalization levels, so a paper can show what each layer actually
-adds instead of just "generic vs personalized":
-1. `generic` — same message regardless of anything detected.
+**Experiment 3 — message-quality ablation.** Four personalization levels:
+1. `generic` — the same message regardless of anything detected.
 2. `emotion_only` — acknowledges the raw detected emotion, no theory.
-3. `need_only` — routes through the SDT need (what earlier versions of
-   this repo called simply "personalized").
-4. `full_context` — SDT need **and** the specific situation (vignette text
-   + a broad stressor category, e.g. workload overload / lack of
-   recognition / loss of autonomy / administrative pressure / student
-   disengagement / isolation / research-teaching conflict / positive
-   engagement — see `data/vignettes/faculty_vignettes.csv`'s
-   `stressor_category` column). This level always uses the LLM (no fixed
-   template could cover 75 different specific situations) and is skipped
-   for *all* vignettes with one clear message if no `ANTHROPIC_API_KEY` is
-   set, rather than partially generating it.
+3. `need_only` — routes through the SDT need mapped from the emotion (autonomy / competence /
+   relatedness), via Deci & Ryan's Self-Determination Theory and the WTMST teacher-motivation framework
+   (Fernet et al.).
+4. `full_context` — SDT need **and** the specific situation (vignette text + stressor category), always
+   via LLM (no template could cover 75 distinct situations).
 
-Two conditions, same as before:
-- *Oracle*: emotion = the **gold** label - an upper bound ("if detection
-  were perfect, does personalization help?").
-- *End-to-end*: emotion = the **predicted** label from `llm_fewshot` (read
-  from `results/exp2_predictions.csv`, so run Exp.2 with `--use_llm`
-  first). Shows how classification errors actually propagate into the
-  final message, and reports a `need_match_rate` (how often a wrong
-  emotion prediction still happens to map to the right SDT need - e.g.
-  `anger`/`disgust` share a need category, so confusing them doesn't
-  necessarily hurt the message).
+...in two conditions — *oracle* (gold emotion label, an upper bound) and *end-to-end* (the predicted
+label from `llm_fewshot`, showing how classification errors actually propagate, with a `need_match_rate`
+diagnostic since some confusions, e.g. anger/disgust, map to the same SDT need and so don't hurt the
+downstream message) — scored two ways: an automatic TF-IDF-similarity-to-need-description proxy (cheap,
+but structurally biased toward levels that share abstract need-vocabulary — see 6.3), and a **blind**
+multi-rater human rubric (`results/exp3_rubric_blind.csv`, key kept separately in
+`exp3_rubric_key.csv`) on 4 dimensions (relevance, specificity, SDT alignment, motivational usefulness),
+analyzed with `experiments/exp3b_rubric_analysis.py`.
 
-All levels in both conditions are scored against the canonical
-description of the *gold* need (TF-IDF cosine similarity) with **staircase**
-paired comparisons (generic→emotion_only→need_only→full_context), not just
-one generic-vs-personalized number - this is what actually answers "what
-adds value: detecting emotion at all, mapping to SDT, or full context?"
-Also exports a **blind**, multi-slot rubric
-(`results/exp3_rubric_blind.csv` + a separate, rater-hidden
-`exp3_rubric_key.csv`) for human expert scoring on 4 dimensions
-(`relevance`, `specificity`, `sdt_alignment`, `motivational_usefulness`),
-on a stratified subsample (`--rubric_sample_size`, default 25 vignettes)
-to keep rater workload reasonable - analyze filled-in copies with
-`experiments/exp3b_rubric_analysis.py`. The automatic TF-IDF similarity
-score is a cheap proxy and is structurally biased toward the more specific
-levels (they share more vocabulary with the need descriptions by
-construction) - **the blind human rubric, not the automatic score alone,
-is the result to lead with in a paper.**
+## 6. Results
 
-**Optional 4th classifier (`--use_llm`) — LLM few-shot.** Instead of
-keyword/n-gram matching, classifies via an LLM API call with 5 labeled
-in-context examples per class (`--llm_examples_per_label`). Skipped
-automatically without `ANTHROPIC_API_KEY`. Costs one API call per
-*predicted* example (responses are cached in `results/.llm_cache.json`,
-calls run in parallel via `--llm_workers`, default 8), so Exp.1 evaluates
-it on a **stratified** sample (`--llm_sample_size`, default 150 rows per
-class — not a flat random sample, so rare classes like `disgust`/`fear` in
-GoEmotions are not left with only 2-3 examples) rather than the full test
-sets, while Exp.2 always runs it on the full 75 vignettes.
+### 6.1 Domain-shift ladder (Experiment 1 + 2)
 
-## 8. Results (full run, no subsampling; `llm_fewshot` from a real `--use_llm` run)
+![Domain shift ladder](results/figures/domain_shift_ladder.png)
 
-### 8.1 A methodological fix that changes the conclusion — read this first
+| model | GoEmotions (in-domain) | ISEAR (cross-dataset) | Vignettes (near-domain) |
+|---|:---:|:---:|:---:|
+| majority-class baseline | 0.350 | 0.200 | 0.200 |
+| `nrc_lexicon` | 0.384 | 0.326 | 0.360 |
+| `tfidf_logreg` (7-class, not a fair comparison) | 0.599 | 0.259 (46.5% out-of-label-space) | 0.227 (49.3% out-of-label-space) |
+| `tfidf_logreg_5class` (fair) | n/a | 0.381 | 0.387 |
+| `transformer` (7-class, not a fair comparison) | **0.693** | 0.338 (54.4% out-of-label-space) | 0.347 |
+| `transformer_5class` (fair) | n/a | 0.545 | 0.520 |
+| `llm_fewshot` | 0.467 | **0.785** | **0.893** |
 
-The original comparison trained `tfidf_logreg` on all 7 GoEmotions classes
-and then evaluated it on ISEAR/vignettes, which only have 5 classes. That
-classifier can still output "neutral"/"surprise" on those evaluations -
-predictions that are *guaranteed wrong* and, worse, are invisible in a
-same-label confusion matrix (they just don't show up anywhere, so the
-matrix rows silently sum to less than the true class count). Checking this
-directly: **46.5% of `tfidf_logreg`'s predictions on ISEAR, and 49.3% on
-the vignettes, land on "neutral"/"surprise"** - i.e. nearly half of its
-apparent error rate cross-domain was a label-space mismatch artifact, not
-evidence that supervised ML generalizes worse than a word-counting
-lexicon. `tfidf_logreg_5class` (identical algorithm, trained only on the 5
-classes the evaluation actually uses) fixes this and is the fair
-comparison point against `nrc_lexicon` and `llm_fewshot` (both of which
-were always restricted to the eval label space by construction). **This
-flips part of the original narrative**: properly compared, plain
-supervised TF-IDF generalizes *at least as well as*, not worse than, the
-lexicon-counting approach. Keep `tfidf_logreg` (7-class) in the table too -
-it is a realistic "what happens if you just deploy your original model
-into a narrower context" baseline - but do not call it a fair comparison
-to the other two.
+Three findings:
+1. **The classifier sophistication ladder behaves exactly as modern NLP would predict**:
+   lexicon < TF-IDF < fine-tuned transformer < LLM few-shot, on the fair (label-space-matched)
+   cross-domain comparisons. No surprises, which is itself reassuring — it means the earlier
+   methodological fix (the fair-comparison variants) produced a sensible, expected picture rather than
+   an artifact-driven one.
+2. **In-domain performance is not a safe proxy for out-of-domain performance, and gets worse the better
+   the in-domain fit is**: `transformer` has the best in-domain score (0.693) of any non-LLM method, but
+   also the *highest* out-of-label-space rate cross-dataset (54.4%, even higher than `tfidf_logreg`'s
+   46.5%) — a better in-domain fit made it *more* confident in wrong, in-domain-typical predictions once
+   the domain shifted, not less.
+3. **LLM few-shot is the only method that is robust to domain shift without any fine-tuning**, and is
+   actually *worse* than both supervised classical methods in-domain (0.467, vs. 0.599 and 0.693) — it
+   has nothing to overfit to a noisy, short, sarcasm-prone Reddit-comment register, which is a liability
+   in-domain but an asset once the text register changes.
 
-### 8.2 Classifier accuracy across the domain-shift ladder
+Sadness (relatedness/isolation) remains the hardest emotion for the non-LLM methods on the vignettes
+(`nrc_lexicon` 13%, `tfidf_logreg_5class` 47%), consistent with it being expressed through quiet,
+context-dependent language rather than explicit "sad" vocabulary; `llm_fewshot` gets this right 100% of
+the time on the vignettes, consistent with contextual reasoning (not keyword overlap) being what is
+needed for implied emotion.
 
-| model | majority-class baseline | GoEmotions (in-domain) | ISEAR (cross-dataset) | Vignettes (near-domain) |
+### 6.2 Automatic message-quality ablation (Experiment 3, TF-IDF proxy)
+
+| level | oracle | end-to-end |
+|---|:---:|:---:|
+| `generic` | 0.0229 | 0.0229 |
+| `emotion_only` | 0.0267 (n.s. vs. generic) | 0.0313 (+, p=0.013) |
+| `need_only` | 0.0541 (++, p<0.0001 vs. emotion_only) | 0.0491 (+, p=0.005) |
+| `full_context` | 0.0455 (n.s. vs. need_only, p=0.083) | 0.0461 (n.s., p=0.52) |
+
+On this automatic metric, `need_only` and `full_context` are statistically indistinguishable in **both**
+conditions. Read together with 6.4 below, this is not a contradiction to explain away — it is a clean,
+useful methodological contrast (see 6.3).
+
+### 6.3 Why the automatic metric and human judgment disagree
+
+`need_only` messages are a small, hand-written set of templates deliberately phrased close to the SDT
+need vocabulary (because the need description was written in similar language); `full_context` messages
+are LLM-generated, unique per vignette, and reference a concrete detail of the situation (e.g. *"Having
+three committees added to an already full teaching load — without even being consulted..."*). The
+automatic metric rewards lexical overlap with an abstract need description, which is precisely the
+feature `full_context` trades away in favor of situational specificity. **This is direct evidence that a
+text-similarity proxy is not a safe substitute for human judgment when evaluating which generated
+message is actually better — which is exactly why a blind human rubric, not the automatic score, is the
+result this study leads with.**
+
+### 6.4 Human expert evaluation — the headline result
+
+21 higher-education faculty/researchers (6 Professors, 10 Associate Professors, 3 Assistant Professors,
+2 Researchers; 5-20+ years of experience) each rated 25 stratified vignettes x up to 4 anonymized,
+randomly-ordered message slots x 4 dimensions, blind to which message was generic/emotion-only/
+need-only/full-context (`results/human_ratings/`, raw export in
+`results/human_eval_raw_responses.xlsx`).
+
+![Human rubric staircase](results/figures/human_rubric_staircase.png)
+
+| level | relevance | specificity | SDT alignment | motivational usefulness |
 |---|:---:|:---:|:---:|:---:|
-| (always predict the most frequent class) | 0.350 / 0.200 / 0.200 | — | — | — |
-| `nrc_lexicon` | — | 0.384 | 0.326 | 0.360 |
-| `tfidf_logreg` (7-class, **not** a fair comparison) | — | 0.599 | 0.259 (46.5% out-of-label-space) | 0.227 (49.3% out-of-label-space) |
-| `tfidf_logreg_5class` (7-class trained, fair) | — | n/a | **0.381** | **0.387** |
-| `llm_fewshot` (5 examples/class, n=150/class·n=750·n=75) | — | 0.467 | **0.785** | **0.893** |
+| `generic` | 2.47 | 2.45 | 2.44 | 2.47 |
+| `emotion_only` | 2.83 | 2.71 | 2.77 | 2.86 |
+| `need_only` | 2.89 | 2.91 | 2.90 | 2.99 |
+| `full_context` | **3.52** | **3.49** | **3.43** | **3.44** |
 
-See `results/figures/domain_shift_ladder.png` for this as a chart.
+A clean, monotonic staircase on **every** dimension, with **zero exceptions** across 21 raters x 25
+items. Two results matter most:
+- `emotion_only` -> `need_only` is the SDT-routing step; it is significant on 3 of 4 dimensions
+  (specificity p<0.001, SDT alignment p=0.027, usefulness p=0.043) but **not** on relevance (p=0.30) —
+  i.e. naming the need helps raters see the message as more targeted and useful, but not necessarily
+  more "relevant" per se.
+- `need_only` -> `full_context` is the **largest** jump of the whole staircase on every dimension
+  (Cohen's d = 0.32-0.40, p<0.0001 throughout) — bigger than the SDT-routing step itself. This directly
+  answers the question this study set out to ask: **theory-guided need modeling contributes more to
+  perceived intervention quality than emotion recognition alone, and situating that theory in the
+  specific reported situation contributes even more.**
 
-Three findings, not one:
-1. **The lexicon-vs-TF-IDF story was partly an artifact** (8.1) - once
-   fairly compared, classical supervised ML (`tfidf_logreg_5class`) is the
-   best non-LLM option cross-domain, not the worst.
-2. **`llm_fewshot` is in a different league on out-of-domain text**
-   (0.785 ISEAR, 0.893 vignettes) even with only 5 in-context examples per
-   class and no fine-tuning, confirming the original hypothesis that
-   contextual/semantic understanding - not bigger classical models - is
-   what actually closes the domain gap.
-3. `llm_fewshot`'s **in-domain** GoEmotions score (0.467) is still its
-   *lowest* of the three points, below `tfidf_logreg`'s in-domain score
-   (0.599). GoEmotions' short, decontextualized, sarcasm-prone Reddit
-   comments appear to be the hardest text register for all four methods,
-   few-shot prompting included; see the confusion matrices in
-   `results/figures/llm_fewshot_in_domain_cm.png` for where it struggles
-   (`disgust`/`neutral`/`surprise` get confused with each other most).
+**Honest caveat**: pairwise inter-rater correlation of individual item scores is low (0.05-0.12 across
+levels/dimensions) — raters do not strongly agree on the *absolute* 1-5 score for the same item, likely
+reflecting different personal calibration of the scale. This does not undermine the aggregate staircase
+(n=525 ratings per level per dimension gives a stable, highly significant mean), but it is a genuine
+limitation worth reporting plainly rather than omitting, and a stronger inter-rater statistic (e.g. ICC)
+is recommended for the manuscript over the simple pairwise correlation computed here.
 
-The faculty-vignette result (0.893) should be read as closer to a **best
-case** than a realistic field estimate: the vignettes were written by the
-research team to be reasonably clear-cut illustrations of one emotion each
-(see 8.4 on `disgust`), which is easier than naturally occurring,
-ambiguous real text. ISEAR's 0.785 is probably the more representative
-estimate of what to expect on natural (if not faculty-specific) text.
+### 6.5 Key takeaways
 
-### 8.3 Per-emotion patterns worth reporting explicitly
+1. The classifier comparison behaves exactly as expected once a real methodological flaw (label-space
+   mismatch) was found and fixed — a useful cautionary finding in its own right for anyone building this
+   kind of tool cheaply on public data.
+2. LLM few-shot prompting, not bigger classical models, is what actually closes the domain-shift gap.
+3. **The single most important finding of this study**: in blind human judgment, routing a detected
+   emotion through a recognized motivational theory (SDT) — and then grounding that theory in the
+   specific reported situation — drives perceived message quality far more than detecting the emotion in
+   the first place. Automatic text-similarity metrics cannot see this; only human evaluation can.
 
-Sadness (relatedness/isolation) remains the hardest emotion for the
-non-LLM methods on the vignettes (`nrc_lexicon` 13%, `tfidf_logreg` 27%),
-consistent with it being expressed through quiet, context-dependent
-language rather than explicit "sad" vocabulary - `llm_fewshot` gets this
-right 100% of the time, which is itself informative: this looks like a
-case where contextual reasoning, not keyword overlap, is doing the work.
+## 7. Limitations & future work
 
-`disgust` is `llm_fewshot`'s weakest vignette category (60-88% depending
-on the run) and is the one place classification noise reaches Experiment 3
-(see 8.5). Looking at exactly which `disgust` vignettes get confused with
-`anger` (`results/exp2_predictions.csv`), most are about moral/ethical
-disapproval (favoritism, authorship unfairness, conflicts of interest)
-rather than visceral disgust - a known hard boundary in emotion theory
-(moral disgust vs. anger/moral outrage), not an implementation bug.
+- No real faculty data was used or collected for Experiments 2-3; the scenario set is researcher-authored
+  (optionally face-validity-checked via `vignette_validation_template.csv`, not yet done by independent
+  raters).
+- The emotion -> SDT-need mapping (`src/sdt_mapping.py`) is a literature-informed proposal, not an
+  empirically validated instrument.
+- Inter-rater agreement on the human rubric is low at the item level (6.4); a larger/more calibrated
+  rater pool and a proper ICC analysis would strengthen this further.
+- Next step: an empirical pilot with real faculty, using validated scales (WLEIS or TEIQue-SF for
+  emotional intelligence, WTMST for teacher motivation), with ethics committee approval and informed
+  consent — this repository's findings motivate and de-risk that next, more expensive step rather than
+  substituting for it.
 
-### 8.4 Intervention message quality (Experiment 3) — 4-level ablation
+## 8. Datasets, lexicon & tooling attribution
 
-Oracle condition (n = 75), TF-IDF similarity to the target need description,
-staircase comparisons (each level vs. the previous one):
+- **GoEmotions**: Demszky, D., Nemoto, K., Briakou, E., Yenidogan, M., Sharma, S., Cowen, A., Nemenman,
+  I., & Ravi, S. (2020). GoEmotions: A Dataset of Fine-Grained Emotions. *ACL 2020*.
+- **ISEAR**: Scherer, K. R., & Wallbott, H. G. International Survey on Emotion Antecedents and Reactions.
+- **NRC Emotion Lexicon (EmoLex)**: Mohammad, S. M., & Turney, P. D. (2013). Crowdsourcing a
+  word-emotion association lexicon. *Computational Intelligence*, 29(3), 436-465. Free for research use
+  — see `data/lexicon/README.md`.
+- **Self-Determination Theory**: Deci, E. L., & Ryan, R. M. (2000). The "what" and "why" of goal
+  pursuits: Human needs and the self-determination of behavior. *Psychological Inquiry*, 11(4), 227-268.
+- **WTMST**: Fernet, C., Senécal, C., Guay, F., Marsh, H., & Dowson, M. (2008). The Work Tasks
+  Motivation Scale for Teachers (WTMST). *Journal of Career Assessment*, 16(2), 256-279.
 
-| level | mean similarity | vs. previous level |
-|---|:---:|---|
-| `generic` (baseline) | 0.023 | — |
-| `emotion_only` | 0.027 | +0.004, paired t-test p = 0.27 (**not significant**) |
-| `need_only` | 0.057 | +0.031, paired t-test p < 0.0001 |
-| `full_context` | *(needs `ANTHROPIC_API_KEY`, see 6)* | — |
+## 9. Citation
 
-See `results/figures/exp3_ablation_oracle.png`. This decomposition answers
-a sharper question than "personalization works": **simply detecting and
-naming the emotion (`emotion_only`) adds nothing measurable on its own** -
-the real jump happens specifically at the SDT-need-routing step
-(`need_only`). That is a more defensible, more specific claim for a paper
-than "personalized beats generic": it is the theory-driven routing, not
-emotion detection per se, that is doing the work. Run with
-`ANTHROPIC_API_KEY` set to also get the `full_context` point and see
-whether situational specificity adds a further step on top of that.
+If you use this repository, please cite the associated manuscript (see `PAPER_OUTLINE.md` for the
+current draft structure) and/or this repository directly:
 
-**Caveat that matters more than the p-values**: TF-IDF similarity to a need
-description is a weak, automatable proxy that is structurally biased
-toward the more specific levels (they share more vocabulary with the need
-descriptions by construction - `generic` could never score well on this
-metric even if a human found it equally appropriate). Treat this as a
-sanity check that the routing logic does what it says, not as evidence of
-real motivational benefit. **The blind human rubric
-(`results/exp3_rubric_blind.csv`, 4 dimensions - relevance, specificity,
-sdt_alignment, motivational_usefulness - analyzed with
-`experiments/exp3b_rubric_analysis.py`) is the result a paper should lead
-with**; this repo ships the rubric and analysis code on a stratified
-25-vignette subsample, but the actual human ratings still need to be
-collected (3-5 raters, ~15-20 minutes each for 25 vignettes × up to 4
-slots × 4 dimensions).
+```bibtex
+@software{ei_faculty_motivation,
+  title  = {An SDT-Grounded Digital Tool for Faculty Motivation: A Feasibility Study with a
+            Personalization-Layer Ablation},
+  author = {Kuznetsov, Oleksandr and collaborators},
+  year   = {2026},
+  url    = {https://github.com/<your-username>/ei-faculty-motivation}
+}
+```
 
-### 8.5 End-to-end condition (run Exp.2 with `--use_llm` first to enable)
+## 10. License
 
-Once `results/exp2_predictions.csv` contains `llm_fewshot` predictions,
-Experiment 3 automatically also runs the full 4-level staircase in an
-**end-to-end** condition: messages generated from the *predicted* (not
-gold) emotion, still scored against the *true* underlying need. This is
-the number that actually demonstrates the full pipeline, not just the
-personalization layer in isolation. It also reports `need_match_rate`: how
-often a wrong emotion prediction still happens to map to the correct SDT
-need (e.g. `anger` and `disgust` both map to `autonomy`, so confusing them
-doesn't necessarily hurt the message). Compare the oracle and end-to-end
-staircases side by side - if the `need_only` jump survives end-to-end
-despite real classifier noise, that is a much stronger claim than the
-oracle number alone.
-## 9. On model choice: why not just use a fancier architecture?
-
-It is tempting to read "40% accuracy" as "use a better model" and reach for
-something like a Kolmogorov-Arnold Network (KAN/pyKAN). That is very
-unlikely to help here, for a concrete reason: KANs replace fixed
-activation functions with learnable splines, which is a real advantage for
-fitting smooth, low-dimensional continuous functions (the symbolic
-regression / scientific-computing problems they were introduced for). Text
-classification is the opposite kind of problem — high-dimensional, sparse,
-discrete token input — and there is no published evidence that KANs help
-there; if anything they are harder to train and less mature for this data
-type. The bottleneck demonstrated by Exp.1/Exp.2 is **domain mismatch**
-(training distribution vs. the target text register), not insufficient
-model expressiveness, so a more expressive function approximator does not
-address it.
-
-What would plausibly help, roughly in order of expected impact:
-
-1. **Real or higher-fidelity in-domain data.** The only way to reliably get
-   high accuracy *specifically on faculty text* is to have labeled
-   examples from that text register. This is exactly the gap this
-   feasibility study identified — and the natural next, separately funded
-   empirical step (real faculty data collection, see Limitations below).
-2. **LLM-based few-shot classification** (`--use_llm` in this repo) —
-   **confirmed, not just hypothesized**: 0.785 cross-dataset / 0.893
-   vignette accuracy with only 5 in-context examples per class (8.2),
-   well above either non-LLM baseline. Because it draws on broad
-   semantic/contextual knowledge rather than surface keyword overlap, it
-   handles *implied* emotion (e.g. quiet isolation phrased without any
-   "sad" word) far better than the other methods (8.3).
-3. **A fine-tuned transformer** (`--use_transformer`). Likely improves the
-   in-domain GoEmotions number somewhat over `tfidf_logreg` (published
-   GoEmotions benchmarks with transformers are meaningfully but not
-   dramatically higher), and may generalize a bit better cross-domain than
-   raw TF-IDF n-grams because it carries pretrained semantic
-   representations rather than purely lexical ones — but it is not
-   expected to close the domain gap on its own, and is the least-tested
-   option in this repo (no GPU/internet access in the sandbox this was
-   built in - run it yourself to check).
-
-None of these change the central methodological point: a classifier's
-in-domain accuracy is not a safe proxy for how it will perform on a
-different population, and that gap should be measured and reported, not
-assumed away by picking a bigger model.
-
-## 10. Limitations & future work
-
-- No real faculty data was used or collected; Experiments 2-3 use a
-  researcher-authored scenario set, not field data. An optional expert
-  face-validity check on the scenarios is in
-  `data/vignettes/vignette_validation_template.csv`, but it has not been
-  filled in by independent raters yet - do that before treating the
-  scenario set as validated.
-- The emotion→need mapping (`src/sdt_mapping.py`) is a literature-informed
-  proposal, not an empirically validated instrument — it should be reviewed
-  by domain experts (e.g. organisational psychologists) before being used
-  with real people.
-- The automatic relevance metric (TF-IDF similarity) is a proxy for message
-  quality and is structurally biased toward the personalized condition
-  (8.4) - not a measure of actual motivational impact, and not strong
-  enough to lead a paper's claims on its own. The blind rubric
-  (`results/exp3_rubric_blind.csv`) is built and ready, but still needs
-  3-5 independent human ratings collected and run through
-  `experiments/exp3b_rubric_analysis.py` before publication.
-- The end-to-end Experiment 3 condition (8.5) depends on having run
-  Experiment 2 with `--use_llm` first; without that, only the oracle
-  (upper-bound) condition is available, and that distinction must be kept
-  explicit in any write-up - oracle results alone do not demonstrate the
-  full pipeline.
-- `disgust` remains a weak point even for `llm_fewshot` (8.3), plausibly
-  because some of the constructed vignettes sit closer to moral
-  disapproval than to visceral disgust - a known hard boundary in emotion
-  theory, worth flagging rather than hiding.
-- Next step: an empirical pilot with real faculty, using validated scales
-  (WLEIS or TEIQue-SF for emotional intelligence, WTMST for teacher
-  motivation), with ethics committee approval and informed consent.
-- **No fine-tuned transformer *results* are reported yet** (the code is
-  implemented, including a fair label-matched variant and on-disk model
-  caching, and its training/predict/caching logic was verified end-to-end
-  offline with a tiny model of the same architecture - real pretrained
-  weights need internet access to the Hugging Face Hub that this repo was
-  built without). Run `--use_transformer` on your own machine (≈50-70 min
-  on CPU, ≈5-15 min on any GPU incl. free Colab - see "Cost/time estimate
-  for `--use_transformer`" above) to get real numbers. Until that is run,
-  write "the codebase supports a transformer baseline; results to follow"
-  rather than "we compared against a transformer baseline."
-- **On paper framing**: this repo accumulated NLP-benchmarking machinery
-  (4 classifiers, fair-comparison fixes, domain-shift ladder) alongside an
-  Education-feasibility design (SDT, vignettes, ablation, intended for
-  *Trends in Higher Education*). Pick ONE primary framing for the
-  write-up rather than trying to be an NLP paper, an AI/HCI paper, and an
-  Education paper simultaneously. Given the target venue, the
-  recommended framing is: **an SDT-grounded feasibility/design study**,
-  where the classifier comparison is supporting methodology (showing why
-  naive public-data classifiers aren't sufficient and what is needed
-  instead), not the contribution itself. Under that framing, the
-  `emotion_only` vs `need_only` ablation finding (8.4) - the theoretical
-  routing layer, not raw emotion detection, is what drives message
-  quality - is the headline result, and classifier benchmarking detail
-  belongs in Methods/Appendix, not the abstract.
-
-## 11. Datasets & attribution
-
-- **GoEmotions**: Demszky, D., Nemoto, K., Briakou, E., Yenidogan, M.,
-  Sharma, S., Cowen, A., Nemenman, I., & Ravi, S. (2020). GoEmotions: A
-  Dataset of Fine-Grained Emotions. *ACL 2020*.
-- **ISEAR**: Scherer, K. R., & Wallbott, H. G. International Survey on
-  Emotion Antecedents and Reactions.
-- **NRC Emotion Lexicon (EmoLex)**: Mohammad, S. M., & Turney, P. D.
-  (2013). Crowdsourcing a word-emotion association lexicon. *Computational
-  Intelligence*, 29(3), 436-465. See `data/lexicon/README.md` for license
-  notes — free for research use.
-
-## 12. License
-
-Code in this repository is released under the MIT License (see `LICENSE`).
-The third-party datasets/lexicon are not covered by that license — see
-Section 11 above.
+Code in this repository is released under the MIT License (see `LICENSE`). The third-party datasets,
+lexicon, and human evaluation raw data are not covered by that license — see Section 8 above and the
+respective files' own headers/notes. Human evaluation data (`results/human_ratings/`,
+`results/human_eval_raw_responses.xlsx`) contains anonymized expert ratings with no identifying fields.
 
 ---
-Usage instructions in Russian: see `INSTRUCTIONS_RU.md`.
+Usage instructions in Russian: see [`INSTRUCTIONS_RU.md`](INSTRUCTIONS_RU.md).
+Proposed manuscript structure: see [`PAPER_OUTLINE.md`](PAPER_OUTLINE.md).

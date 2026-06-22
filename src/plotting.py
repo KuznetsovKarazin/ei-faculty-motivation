@@ -30,7 +30,8 @@ def plot_confusion_matrix(cm, labels, title, out_path):
     plt.close(fig)
 
 
-def plot_domain_shift_ladder(accuracies, out_path, title="Accuracy across domain shift"):
+def plot_domain_shift_ladder(accuracies, out_path, title="Accuracy across domain shift",
+                              model_order=None):
     """Grouped bar chart: one group per evaluation point (e.g. GoEmotions /
     ISEAR / Vignettes), one bar per model within each group.
 
@@ -40,13 +41,21 @@ def plot_domain_shift_ladder(accuracies, out_path, title="Accuracy across domain
          "Vignettes\n(near-domain)": {...}}
     All inner dicts should share the same model keys for a clean chart;
     missing values are skipped for that model/group.
+
+    model_order: optional explicit list controlling bar/legend order (e.g.
+    grouped by method family for a publication figure). Defaults to
+    discovery order across eval points if not given.
     """
     eval_points = list(accuracies.keys())
-    model_names = []
-    for d in accuracies.values():
-        for k in d:
-            if k not in model_names:
-                model_names.append(k)
+    if model_order:
+        model_names = [m for m in model_order
+                       if any(m in d for d in accuracies.values())]
+    else:
+        model_names = []
+        for d in accuracies.values():
+            for k in d:
+                if k not in model_names:
+                    model_names.append(k)
 
     n_models = len(model_names)
     x = np.arange(len(eval_points))

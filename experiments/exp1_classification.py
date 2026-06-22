@@ -192,6 +192,9 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
                                       os.path.join(FIGURES_DIR, "transformer_5class_cross_dataset_cm.png"))
         except TransformerUnavailableError as exc:
             print(f"[skipped] transformer baseline unavailable: {exc}")
+            if exc.__cause__:
+                print(f"[skipped] underlying error (the real cause - read this, "
+                      f"not just the message above): {type(exc.__cause__).__name__}: {exc.__cause__}")
             all_results["transformer"] = {"skipped_reason": str(exc)}
 
     if use_llm:

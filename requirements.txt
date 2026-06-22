@@ -10,3 +10,7 @@ requests>=2.28
 # run with --use_transformer; requires internet access to Hugging Face Hub)
 transformers>=4.30
 torch>=2.0
+
+# Optional (only needed to convert a Google Forms .xlsx export of the
+# human-rating rubric via experiments/convert_google_forms_rubric.py)
+openpyxl>=3.1

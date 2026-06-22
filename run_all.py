@@ -110,7 +110,10 @@ def main():
 
     from src.plotting import plot_domain_shift_ladder
     ladder_path = "results/figures/domain_shift_ladder.png"
-    plot_domain_shift_ladder(accuracies_for_plot, ladder_path)
+    plot_domain_shift_ladder(
+        accuracies_for_plot, ladder_path,
+        model_order=["nrc_lexicon", "tfidf_logreg", "tfidf_logreg_5class",
+                     "transformer", "transformer_5class", "llm_fewshot"])
     print(f"\nSaved domain-shift summary chart to {ladder_path}")
 
     for cond in exp3_results["conditions"]:

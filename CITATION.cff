@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this repository, please cite it as below."
+title: "An SDT-Grounded Digital Tool for Faculty Motivation: A Feasibility Study with a Personalization-Layer Ablation"
+authors:
+  - family-names: "Kuznetsov"
+    given-names: "Oleksandr"
+    orcid: "https://orcid.org/0000-0003-2331-6326"
+    affiliation: "eCampus University; V.N. Karazin Kharkiv National University"
+version: 1.0.0
+date-released: 2026-06-23
+license: MIT
+repository-code: "https://github.com/<your-username>/ei-faculty-motivation"
+keywords:
+  - emotional intelligence
+  - self-determination theory
+  - higher education
+  - faculty motivation
+  - natural language processing
+  - large language models
+  - design science research
