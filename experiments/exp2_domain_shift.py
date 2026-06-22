@@ -183,6 +183,17 @@ def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
 
     # save per-vignette predictions for inspection / appendix table
     pred_path = os.path.join(RESULTS_DIR, "exp2_predictions.csv")
+    if os.path.exists(pred_path):
+        with open(pred_path, encoding="utf-8") as f:
+            previous_rows = {r["id"]: r for r in csv.DictReader(f)}
+        current_cols = set(vignette_rows[0].keys())
+        for row in vignette_rows:
+            prev = previous_rows.get(row["id"])
+            if not prev:
+                continue
+            for col, val in prev.items():
+                if col not in current_cols and col not in row:
+                    row[col] = val
     fieldnames = list(vignette_rows[0].keys())
     with open(pred_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -190,6 +201,14 @@ def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
         writer.writerows(vignette_rows)
 
     metrics_path = os.path.join(RESULTS_DIR, "exp2_metrics.json")
+    if os.path.exists(metrics_path):
+        with open(metrics_path, encoding="utf-8") as f:
+            previous = json.load(f)
+        for key, val in previous.items():
+            if key not in all_metrics:
+                all_metrics[key] = val
+                print(f"[exp2] kept existing '{key}' results from a previous "
+                      f"run (not recomputed this time)")
     with open(metrics_path, "w", encoding="utf-8") as f:
         json.dump(all_metrics, f, indent=2)
 

@@ -93,6 +93,7 @@ def plot_ablation_comparison(means, sems, out_path,
                 f"{v:.3f}", ha="center", va="bottom", fontsize=9)
     ax.set_ylabel(ylabel)
     ax.set_title(title, fontsize=11)
+    ax.set_ylim(0, max(vals) * 1.25)
     ax.set_xticks(range(len(levels)))
     ax.set_xticklabels(levels, rotation=15, ha="right")
     fig.tight_layout()

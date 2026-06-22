@@ -1,76 +1,76 @@
-id,expected_emotion,sdt_need,context_tag,text,stressor_category,nrc_lexicon_pred,tfidf_logreg_pred,tfidf_logreg_5class_pred
-v001,anger,autonomy,decision_making_exclusion,"Administration keeps changing the syllabus requirements after I have already finalized my course, and nobody asks for my input.",loss_of_autonomy,anger,neutral,sadness
-v002,anger,autonomy,workload_unfairness,"I was assigned three additional committees without being consulted, on top of an already full teaching load.",workload_overload,anger,neutral,sadness
-v003,anger,autonomy,technology_imposed,The new digital platform was forced on us with no training and no choice in the matter.,administrative_pressure,fear,neutral,anger
-v004,anger,autonomy,autonomy_override,My department head overruled my grading decision without even discussing it with me first.,loss_of_autonomy,anger,sadness,sadness
-v005,anger,autonomy,communication_boundaries,"We are expected to answer student emails at any hour, as if we have no right to set boundaries.",workload_overload,anger,anger,anger
-v006,anger,autonomy,evaluation_fairness,"The promotion criteria changed halfway through the review cycle, after I had already submitted my file.",administrative_pressure,anger,neutral,anger
-v007,anger,autonomy,grading_overload,I spent the weekend grading exams that should have been split among three other colleagues who did nothing.,workload_overload,anger,surprise,sadness
-v008,anger,autonomy,bureaucracy_autonomy,"Every time I propose a new teaching method, it gets buried in committee approvals for months.",loss_of_autonomy,fear,neutral,anger
-v009,disgust,autonomy,integrity_favoritism,"I found out that a colleague's paper was accepted purely because of personal connections with the editor, not its quality.",administrative_pressure,joy,neutral,anger
-v010,disgust,autonomy,exploitation_adjuncts,Watching how casually the university outsources teaching to underpaid adjuncts while citing budget constraints makes me sick.,administrative_pressure,sadness,anger,sadness
-v011,disgust,autonomy,academic_integrity,Some students openly use AI to write entire essays and still get full marks because nobody checks.,administrative_pressure,anger,neutral,anger
-v012,disgust,autonomy,metrics_gaming,It is disturbing how research metrics are gamed just to climb university rankings.,administrative_pressure,anger,anger,anger
-v013,disgust,autonomy,ethics_pressure,"I was asked to inflate grades for a donor's child, and the request came with a wink.",administrative_pressure,joy,neutral,sadness
-v014,disgust,autonomy,credit_appropriation,The way some senior staff take credit for their PhD students' work is appalling.,lack_of_recognition,disgust,neutral,joy
-v015,disgust,autonomy,grant_ethics,Seeing how easily ethical guidelines get bent whenever a big grant is at stake bothers me deeply.,administrative_pressure,joy,sadness,sadness
-v016,disgust,autonomy,integrity_enforcement,Plagiarism cases get quietly dropped when the student's family has influence on campus.,administrative_pressure,disgust,neutral,sadness
-v017,fear,competence,tenure_evaluation,I am terrified that my upcoming tenure review will focus only on numbers and ignore years of mentoring work.,administrative_pressure,anger,fear,fear
-v018,fear,competence,student_feedback_anxiety,"Every time I open a new batch of student evaluations, my hands shake before I even read them.",administrative_pressure,anger,sadness,sadness
-v019,fear,competence,ai_displacement,I worry I will be replaced by an AI tool that can grade and lecture faster than I ever could.,administrative_pressure,fear,joy,joy
-v020,fear,competence,public_presentation,The thought of presenting unfinished research in front of senior faculty keeps me up at night.,administrative_pressure,anger,neutral,anger
-v021,fear,competence,contract_renewal,I am anxious that one bad semester of reviews could end my contract renewal.,administrative_pressure,fear,sadness,sadness
-v022,fear,competence,performance_review,I dread the annual performance meeting because I never know which numbers they will judge me by this time.,administrative_pressure,fear,fear,fear
-v023,fear,competence,peer_review_harshness,Reviewer two's comments on my last submission were so harsh that I am scared to submit anywhere again.,research_teaching_conflict,anger,fear,fear
-v024,fear,competence,technical_failure,I feel like I am one technical glitch away from looking incompetent in front of three hundred students.,administrative_pressure,anger,sadness,sadness
-v025,sadness,relatedness,post_leave_isolation,Nobody on the faculty has asked how I am doing since I came back from sick leave.,isolation,sadness,neutral,sadness
-v026,sadness,relatedness,course_cancellation_unrecognized,I spent fifteen years building this course and it was cancelled without a single thank-you.,lack_of_recognition,anger,joy,joy
-v027,sadness,relatedness,social_isolation,I eat lunch alone in my office most days; everyone else seems too busy to talk.,isolation,anger,neutral,anger
-v028,sadness,relatedness,mentorship_loss,My mentor retired and I do not think anyone else here really knows what I am working on.,isolation,anger,surprise,anger
-v029,sadness,relatedness,meeting_disengagement,"I used to look forward to faculty meetings, now they feel like nobody actually listens to each other.",isolation,anger,neutral,joy
-v030,sadness,relatedness,supervision_unrecognized,"After my student's thesis won an award, the department announcement did not even mention my name as the supervisor.",lack_of_recognition,joy,surprise,anger
-v031,sadness,relatedness,remote_isolation,"Working from home most of the semester, I sometimes go days without a real conversation with a colleague.",isolation,anger,neutral,sadness
-v032,sadness,relatedness,community_loss,"I miss when this department felt like a community, not just a row of closed office doors.",isolation,anger,sadness,sadness
-v033,joy,reinforcement,student_impact,A former student wrote to tell me that my course changed the direction of her career.,positive_engagement,anger,sadness,sadness
-v034,joy,reinforcement,research_success,"Our research group's paper just got accepted, and the whole team is genuinely proud.",positive_engagement,joy,disgust,joy
-v035,joy,reinforcement,teaching_innovation,I tried a new project-based format this semester and the students were so engaged it gave me energy for weeks.,positive_engagement,joy,sadness,sadness
-v036,joy,reinforcement,peer_recognition,My colleagues organized a small celebration when I finally finished my habilitation.,positive_engagement,joy,joy,joy
-v037,joy,reinforcement,mentorship_milestone,Mentoring my first PhD student through their defense today felt like one of the best days of my career.,positive_engagement,anger,joy,joy
-v038,joy,reinforcement,resource_improvement,"The new lab equipment finally arrived, and I cannot wait to redesign the practical classes around it.",positive_engagement,disgust,joy,joy
-v039,joy,reinforcement,student_creativity,I got genuinely excited reading the creative final projects my students submitted this term.,positive_engagement,joy,joy,joy
-v040,joy,reinforcement,interdisciplinary_growth,"After years of trying, our interdisciplinary course proposal was finally approved, and three departments want to join.",positive_engagement,disgust,sadness,sadness
-v041,anger,autonomy,scheduling_imposition,I was never consulted before my course was moved to a time slot that conflicts with my research commitments.,loss_of_autonomy,anger,sadness,sadness
-v042,anger,autonomy,resource_denial,The department keeps approving more electives without adding a single additional teaching slot to cover them.,workload_overload,anger,neutral,joy
-v043,anger,autonomy,resource_inequity,"My request for a teaching assistant was denied again, while administrative staff got two new hires this year.",administrative_pressure,sadness,joy,joy
-v044,anger,autonomy,mandatory_training_redundant,I am required to attend a full day of mandatory training that covers material I already teach myself.,administrative_pressure,joy,neutral,anger
-v045,anger,autonomy,retroactive_policy_change,The committee changed my course's accreditation requirements after the semester had already started.,administrative_pressure,anger,neutral,joy
-v046,anger,autonomy,system_migration_unannounced,I had to redo an entire exam bank because IT switched platforms without warning anyone teaching this term.,administrative_pressure,fear,surprise,anger
-v047,anger,autonomy,proposal_dismissed,Every proposal I submit to improve the lab gets silently shelved without anyone explaining why.,loss_of_autonomy,joy,surprise,anger
-v048,disgust,autonomy,cv_padding,It bothers me that some colleagues pad their CVs with conference talks they never actually gave.,administrative_pressure,anger,sadness,sadness
-v049,disgust,autonomy,student_exploitation,Watching a colleague pressure their graduate students to work unpaid weekends under the threat of bad references is hard to ignore.,administrative_pressure,anger,sadness,sadness
-v050,disgust,autonomy,peer_review_conflict_of_interest,I find it troubling how easily some peer reviewers reject papers that compete with their own ongoing research.,research_teaching_conflict,anger,neutral,anger
-v051,disgust,autonomy,institutional_hypocrisy,The university happily advertises diversity in its brochures while quietly underfunding the programs that would support it.,administrative_pressure,joy,neutral,joy
-v052,disgust,autonomy,effort_shirking,Some faculty openly recycle the same lecture slides for a decade and call it efficient teaching.,administrative_pressure,anger,neutral,joy
-v053,disgust,autonomy,misconduct_grant_shielding,It is unsettling how quickly a misconduct complaint disappeared once the accused brought in a large research grant.,administrative_pressure,anger,surprise,sadness
-v054,disgust,autonomy,authorship_unfairness,I dislike how authorship gets handed out based on seniority rather than who actually did the work.,lack_of_recognition,anger,surprise,anger
-v055,fear,competence,admitting_struggle_risk,I am afraid that admitting I am struggling with the new curriculum will be held against me at review time.,administrative_pressure,fear,fear,fear
-v056,fear,competence,single_complaint_anxiety,I keep worrying that one negative comment from a student could outweigh years of strong evaluations.,administrative_pressure,sadness,neutral,joy
-v057,fear,competence,grant_renewal_anxiety,The thought of my grant renewal being rejected after years of work makes it hard to sleep some nights.,research_teaching_conflict,joy,sadness,sadness
-v058,fear,competence,career_pivot_anxiety,I am nervous that switching research directions now will make me look unproductive to the tenure committee.,administrative_pressure,fear,fear,fear
-v059,fear,competence,course_cut_anxiety,"Every time enrollment numbers are mentioned in a meeting, I worry my course might be the one that gets cut.",administrative_pressure,fear,sadness,sadness
-v060,fear,competence,disclosure_anxiety,I am scared that asking for accommodations for my health condition will quietly affect how I am viewed by leadership.,administrative_pressure,anger,fear,fear
-v061,fear,competence,bias_anxiety,"I worry that my accent or non-native English will be used against me in my next evaluation, even unspoken.",administrative_pressure,fear,fear,fear
-v062,sadness,relatedness,grant_rejection_unacknowledged,"Nobody from the department reached out after my research grant was rejected, even though everyone knew how much work went into it.",lack_of_recognition,joy,sadness,sadness
-v063,sadness,relatedness,exclusion_drift,"I used to be invited to curriculum planning meetings, and now I just hear about decisions after they are made.",loss_of_autonomy,anger,sadness,sadness
-v064,sadness,relatedness,relocation_unsupported,"It is disheartening that after relocating my whole life for this position, almost no one has asked how the transition has been.",isolation,sadness,sadness,sadness
-v065,sadness,relatedness,remote_teaching_loneliness,"My online students rarely turn on their cameras, and some days teaching feels like talking to an empty room.",student_disengagement,anger,neutral,joy
-v066,sadness,relatedness,legacy_unrecognized,"I quietly stepped down from chairing the committee I built over ten years, and there was no acknowledgment at all.",lack_of_recognition,anger,neutral,anger
-v067,sadness,relatedness,collaborator_loss,"Since my co-author left the university, I have had no one nearby to really discuss ideas with.",isolation,anger,neutral,sadness
-v068,sadness,relatedness,invisibility,I sometimes wonder if anyone would notice if I stopped showing up to non-mandatory department events.,isolation,anger,surprise,anger
-v069,joy,reinforcement,cross_department_impact,A colleague from another department reached out just to say my workshop changed how they teach their own course.,positive_engagement,joy,neutral,anger
-v070,joy,reinforcement,student_publication_pride,Seeing my former student's name as first author on a strong publication filled me with quiet pride.,positive_engagement,sadness,joy,joy
-v071,joy,reinforcement,informal_community_joy,Our small reading group has turned into one of the most intellectually alive parts of my week.,positive_engagement,joy,sadness,sadness
-v072,joy,reinforcement,experiment_success,"After months of debugging, the experiment finally worked exactly as the theory predicted, and the whole lab cheered.",positive_engagement,disgust,neutral,joy
-v073,joy,reinforcement,student_nomination,"I was unexpectedly nominated by students for a teaching award, and just being nominated meant a lot.",positive_engagement,joy,neutral,joy
-v074,joy,reinforcement,return_welcome,"Returning to the classroom after parental leave, I was surprised by how warmly my students welcomed me back.",positive_engagement,sadness,surprise,sadness
-v075,joy,reinforcement,breakthrough_moment,Watching a once-struggling student finally have that 'click' moment in office hours made the whole semester worth it.,positive_engagement,disgust,sadness,sadness
+id,expected_emotion,sdt_need,context_tag,text,stressor_category,nrc_lexicon_pred,tfidf_logreg_pred,tfidf_logreg_5class_pred,llm_fewshot_pred
+v001,anger,autonomy,decision_making_exclusion,"Administration keeps changing the syllabus requirements after I have already finalized my course, and nobody asks for my input.",loss_of_autonomy,anger,neutral,sadness,anger
+v002,anger,autonomy,workload_unfairness,"I was assigned three additional committees without being consulted, on top of an already full teaching load.",workload_overload,anger,neutral,sadness,anger
+v003,anger,autonomy,technology_imposed,The new digital platform was forced on us with no training and no choice in the matter.,administrative_pressure,fear,neutral,anger,anger
+v004,anger,autonomy,autonomy_override,My department head overruled my grading decision without even discussing it with me first.,loss_of_autonomy,anger,sadness,sadness,anger
+v005,anger,autonomy,communication_boundaries,"We are expected to answer student emails at any hour, as if we have no right to set boundaries.",workload_overload,anger,anger,anger,anger
+v006,anger,autonomy,evaluation_fairness,"The promotion criteria changed halfway through the review cycle, after I had already submitted my file.",administrative_pressure,anger,neutral,anger,anger
+v007,anger,autonomy,grading_overload,I spent the weekend grading exams that should have been split among three other colleagues who did nothing.,workload_overload,anger,surprise,sadness,anger
+v008,anger,autonomy,bureaucracy_autonomy,"Every time I propose a new teaching method, it gets buried in committee approvals for months.",loss_of_autonomy,fear,neutral,anger,sadness
+v009,disgust,autonomy,integrity_favoritism,"I found out that a colleague's paper was accepted purely because of personal connections with the editor, not its quality.",administrative_pressure,joy,neutral,anger,disgust
+v010,disgust,autonomy,exploitation_adjuncts,Watching how casually the university outsources teaching to underpaid adjuncts while citing budget constraints makes me sick.,administrative_pressure,sadness,anger,sadness,disgust
+v011,disgust,autonomy,academic_integrity,Some students openly use AI to write entire essays and still get full marks because nobody checks.,administrative_pressure,anger,neutral,anger,anger
+v012,disgust,autonomy,metrics_gaming,It is disturbing how research metrics are gamed just to climb university rankings.,administrative_pressure,anger,anger,anger,disgust
+v013,disgust,autonomy,ethics_pressure,"I was asked to inflate grades for a donor's child, and the request came with a wink.",administrative_pressure,joy,neutral,sadness,disgust
+v014,disgust,autonomy,credit_appropriation,The way some senior staff take credit for their PhD students' work is appalling.,lack_of_recognition,disgust,neutral,joy,disgust
+v015,disgust,autonomy,grant_ethics,Seeing how easily ethical guidelines get bent whenever a big grant is at stake bothers me deeply.,administrative_pressure,joy,sadness,sadness,disgust
+v016,disgust,autonomy,integrity_enforcement,Plagiarism cases get quietly dropped when the student's family has influence on campus.,administrative_pressure,disgust,neutral,sadness,disgust
+v017,fear,competence,tenure_evaluation,I am terrified that my upcoming tenure review will focus only on numbers and ignore years of mentoring work.,administrative_pressure,anger,fear,fear,fear
+v018,fear,competence,student_feedback_anxiety,"Every time I open a new batch of student evaluations, my hands shake before I even read them.",administrative_pressure,anger,sadness,sadness,fear
+v019,fear,competence,ai_displacement,I worry I will be replaced by an AI tool that can grade and lecture faster than I ever could.,administrative_pressure,fear,joy,joy,fear
+v020,fear,competence,public_presentation,The thought of presenting unfinished research in front of senior faculty keeps me up at night.,administrative_pressure,anger,neutral,anger,fear
+v021,fear,competence,contract_renewal,I am anxious that one bad semester of reviews could end my contract renewal.,administrative_pressure,fear,sadness,sadness,fear
+v022,fear,competence,performance_review,I dread the annual performance meeting because I never know which numbers they will judge me by this time.,administrative_pressure,fear,fear,fear,fear
+v023,fear,competence,peer_review_harshness,Reviewer two's comments on my last submission were so harsh that I am scared to submit anywhere again.,research_teaching_conflict,anger,fear,fear,fear
+v024,fear,competence,technical_failure,I feel like I am one technical glitch away from looking incompetent in front of three hundred students.,administrative_pressure,anger,sadness,sadness,fear
+v025,sadness,relatedness,post_leave_isolation,Nobody on the faculty has asked how I am doing since I came back from sick leave.,isolation,sadness,neutral,sadness,sadness
+v026,sadness,relatedness,course_cancellation_unrecognized,I spent fifteen years building this course and it was cancelled without a single thank-you.,lack_of_recognition,anger,joy,joy,sadness
+v027,sadness,relatedness,social_isolation,I eat lunch alone in my office most days; everyone else seems too busy to talk.,isolation,anger,neutral,anger,sadness
+v028,sadness,relatedness,mentorship_loss,My mentor retired and I do not think anyone else here really knows what I am working on.,isolation,anger,surprise,anger,sadness
+v029,sadness,relatedness,meeting_disengagement,"I used to look forward to faculty meetings, now they feel like nobody actually listens to each other.",isolation,anger,neutral,joy,sadness
+v030,sadness,relatedness,supervision_unrecognized,"After my student's thesis won an award, the department announcement did not even mention my name as the supervisor.",lack_of_recognition,joy,surprise,anger,sadness
+v031,sadness,relatedness,remote_isolation,"Working from home most of the semester, I sometimes go days without a real conversation with a colleague.",isolation,anger,neutral,sadness,sadness
+v032,sadness,relatedness,community_loss,"I miss when this department felt like a community, not just a row of closed office doors.",isolation,anger,sadness,sadness,sadness
+v033,joy,reinforcement,student_impact,A former student wrote to tell me that my course changed the direction of her career.,positive_engagement,anger,sadness,sadness,joy
+v034,joy,reinforcement,research_success,"Our research group's paper just got accepted, and the whole team is genuinely proud.",positive_engagement,joy,disgust,joy,joy
+v035,joy,reinforcement,teaching_innovation,I tried a new project-based format this semester and the students were so engaged it gave me energy for weeks.,positive_engagement,joy,sadness,sadness,joy
+v036,joy,reinforcement,peer_recognition,My colleagues organized a small celebration when I finally finished my habilitation.,positive_engagement,joy,joy,joy,joy
+v037,joy,reinforcement,mentorship_milestone,Mentoring my first PhD student through their defense today felt like one of the best days of my career.,positive_engagement,anger,joy,joy,joy
+v038,joy,reinforcement,resource_improvement,"The new lab equipment finally arrived, and I cannot wait to redesign the practical classes around it.",positive_engagement,disgust,joy,joy,joy
+v039,joy,reinforcement,student_creativity,I got genuinely excited reading the creative final projects my students submitted this term.,positive_engagement,joy,joy,joy,joy
+v040,joy,reinforcement,interdisciplinary_growth,"After years of trying, our interdisciplinary course proposal was finally approved, and three departments want to join.",positive_engagement,disgust,sadness,sadness,joy
+v041,anger,autonomy,scheduling_imposition,I was never consulted before my course was moved to a time slot that conflicts with my research commitments.,loss_of_autonomy,anger,sadness,sadness,anger
+v042,anger,autonomy,resource_denial,The department keeps approving more electives without adding a single additional teaching slot to cover them.,workload_overload,anger,neutral,joy,anger
+v043,anger,autonomy,resource_inequity,"My request for a teaching assistant was denied again, while administrative staff got two new hires this year.",administrative_pressure,sadness,joy,joy,anger
+v044,anger,autonomy,mandatory_training_redundant,I am required to attend a full day of mandatory training that covers material I already teach myself.,administrative_pressure,joy,neutral,anger,anger
+v045,anger,autonomy,retroactive_policy_change,The committee changed my course's accreditation requirements after the semester had already started.,administrative_pressure,anger,neutral,joy,anger
+v046,anger,autonomy,system_migration_unannounced,I had to redo an entire exam bank because IT switched platforms without warning anyone teaching this term.,administrative_pressure,fear,surprise,anger,anger
+v047,anger,autonomy,proposal_dismissed,Every proposal I submit to improve the lab gets silently shelved without anyone explaining why.,loss_of_autonomy,joy,surprise,anger,sadness
+v048,disgust,autonomy,cv_padding,It bothers me that some colleagues pad their CVs with conference talks they never actually gave.,administrative_pressure,anger,sadness,sadness,anger
+v049,disgust,autonomy,student_exploitation,Watching a colleague pressure their graduate students to work unpaid weekends under the threat of bad references is hard to ignore.,administrative_pressure,anger,sadness,sadness,anger
+v050,disgust,autonomy,peer_review_conflict_of_interest,I find it troubling how easily some peer reviewers reject papers that compete with their own ongoing research.,research_teaching_conflict,anger,neutral,anger,anger
+v051,disgust,autonomy,institutional_hypocrisy,The university happily advertises diversity in its brochures while quietly underfunding the programs that would support it.,administrative_pressure,joy,neutral,joy,anger
+v052,disgust,autonomy,effort_shirking,Some faculty openly recycle the same lecture slides for a decade and call it efficient teaching.,administrative_pressure,anger,neutral,joy,disgust
+v053,disgust,autonomy,misconduct_grant_shielding,It is unsettling how quickly a misconduct complaint disappeared once the accused brought in a large research grant.,administrative_pressure,anger,surprise,sadness,disgust
+v054,disgust,autonomy,authorship_unfairness,I dislike how authorship gets handed out based on seniority rather than who actually did the work.,lack_of_recognition,anger,surprise,anger,anger
+v055,fear,competence,admitting_struggle_risk,I am afraid that admitting I am struggling with the new curriculum will be held against me at review time.,administrative_pressure,fear,fear,fear,fear
+v056,fear,competence,single_complaint_anxiety,I keep worrying that one negative comment from a student could outweigh years of strong evaluations.,administrative_pressure,sadness,neutral,joy,fear
+v057,fear,competence,grant_renewal_anxiety,The thought of my grant renewal being rejected after years of work makes it hard to sleep some nights.,research_teaching_conflict,joy,sadness,sadness,fear
+v058,fear,competence,career_pivot_anxiety,I am nervous that switching research directions now will make me look unproductive to the tenure committee.,administrative_pressure,fear,fear,fear,fear
+v059,fear,competence,course_cut_anxiety,"Every time enrollment numbers are mentioned in a meeting, I worry my course might be the one that gets cut.",administrative_pressure,fear,sadness,sadness,fear
+v060,fear,competence,disclosure_anxiety,I am scared that asking for accommodations for my health condition will quietly affect how I am viewed by leadership.,administrative_pressure,anger,fear,fear,fear
+v061,fear,competence,bias_anxiety,"I worry that my accent or non-native English will be used against me in my next evaluation, even unspoken.",administrative_pressure,fear,fear,fear,fear
+v062,sadness,relatedness,grant_rejection_unacknowledged,"Nobody from the department reached out after my research grant was rejected, even though everyone knew how much work went into it.",lack_of_recognition,joy,sadness,sadness,sadness
+v063,sadness,relatedness,exclusion_drift,"I used to be invited to curriculum planning meetings, and now I just hear about decisions after they are made.",loss_of_autonomy,anger,sadness,sadness,sadness
+v064,sadness,relatedness,relocation_unsupported,"It is disheartening that after relocating my whole life for this position, almost no one has asked how the transition has been.",isolation,sadness,sadness,sadness,sadness
+v065,sadness,relatedness,remote_teaching_loneliness,"My online students rarely turn on their cameras, and some days teaching feels like talking to an empty room.",student_disengagement,anger,neutral,joy,sadness
+v066,sadness,relatedness,legacy_unrecognized,"I quietly stepped down from chairing the committee I built over ten years, and there was no acknowledgment at all.",lack_of_recognition,anger,neutral,anger,sadness
+v067,sadness,relatedness,collaborator_loss,"Since my co-author left the university, I have had no one nearby to really discuss ideas with.",isolation,anger,neutral,sadness,sadness
+v068,sadness,relatedness,invisibility,I sometimes wonder if anyone would notice if I stopped showing up to non-mandatory department events.,isolation,anger,surprise,anger,sadness
+v069,joy,reinforcement,cross_department_impact,A colleague from another department reached out just to say my workshop changed how they teach their own course.,positive_engagement,joy,neutral,anger,joy
+v070,joy,reinforcement,student_publication_pride,Seeing my former student's name as first author on a strong publication filled me with quiet pride.,positive_engagement,sadness,joy,joy,joy
+v071,joy,reinforcement,informal_community_joy,Our small reading group has turned into one of the most intellectually alive parts of my week.,positive_engagement,joy,sadness,sadness,joy
+v072,joy,reinforcement,experiment_success,"After months of debugging, the experiment finally worked exactly as the theory predicted, and the whole lab cheered.",positive_engagement,disgust,neutral,joy,joy
+v073,joy,reinforcement,student_nomination,"I was unexpectedly nominated by students for a teaching award, and just being nominated meant a lot.",positive_engagement,joy,neutral,joy,joy
+v074,joy,reinforcement,return_welcome,"Returning to the classroom after parental leave, I was surprised by how warmly my students welcomed me back.",positive_engagement,sadness,surprise,sadness,joy
+v075,joy,reinforcement,breakthrough_moment,Watching a once-struggling student finally have that 'click' moment in office hours made the whole semester worth it.,positive_engagement,disgust,sadness,sadness,joy

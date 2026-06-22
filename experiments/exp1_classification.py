@@ -189,6 +189,18 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
             all_results["llm_fewshot"] = {"skipped_reason": str(exc)}
 
     out_path = os.path.join(RESULTS_DIR, "exp1_metrics.json")
+    if os.path.exists(out_path):
+        # Preserve results from models NOT recomputed in this run (e.g. don't
+        # let a run without --use_llm silently delete a previous real
+        # llm_fewshot result - this happened once and is exactly the kind of
+        # silent data loss this merge prevents).
+        with open(out_path, encoding="utf-8") as f:
+            previous = json.load(f)
+        for key, val in previous.items():
+            if key not in all_results:
+                all_results[key] = val
+                print(f"[exp1] kept existing '{key}' results from a previous "
+                      f"run (not recomputed this time)")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(all_results, f, indent=2)
     print(f"\nSaved metrics to {out_path}")
