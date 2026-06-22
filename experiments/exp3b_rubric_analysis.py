@@ -107,8 +107,11 @@ def analyze(deanon, rater_name):
             t_stat, t_p = stats.ttest_rel(vb, va)
             sd = np.std(diff, ddof=1)
             d = float(np.mean(diff) / sd) if sd > 0 else 0.0
-            value_added = "n.s." if t_p >= 0.05 else (
-                "+" if abs(d) < 0.5 else "++" if abs(d) < 0.8 else "+++")
+            if t_p >= 0.05:
+                value_added = "n.s."
+            else:
+                magnitude = "+++" if abs(d) >= 0.8 else "++" if abs(d) >= 0.5 else "+"
+                value_added = magnitude if d > 0 else "-" * len(magnitude)
             staircase[f"{a}_vs_{b}"][dim] = {"n": len(pairs), "mean_diff": float(np.mean(diff)),
                                                "paired_ttest_p": float(t_p), "cohens_d": d,
                                                "value_added": value_added}

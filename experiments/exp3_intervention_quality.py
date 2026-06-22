@@ -174,9 +174,14 @@ def run(mode="template", skip_full_context=False, rubric_sample_size=25):
             # Cohen's d for paired samples: mean difference / SD of the
             # differences. This is the actual number behind a "+/++/+++"
             # value-added table - report it instead of asserting it.
+            # IMPORTANT: sign matters - a significant DECREASE must show as
+            # "-"/"--"/"---", not get silently folded into "+" by abs(d).
             d = float(np.mean(diff) / np.std(diff, ddof=1)) if np.std(diff, ddof=1) > 0 else 0.0
-            value_added = "n.s." if t_p >= 0.05 else (
-                "+" if abs(d) < 0.5 else "++" if abs(d) < 0.8 else "+++")
+            if t_p >= 0.05:
+                value_added = "n.s."
+            else:
+                magnitude = "+++" if abs(d) >= 0.8 else "++" if abs(d) >= 0.5 else "+"
+                value_added = magnitude if d > 0 else "-" * len(magnitude)
             staircase[f"{a}_vs_{b}"] = {"paired_ttest_p": t_p, "wilcoxon_p": w_p,
                                           "mean_diff": means[b] - means[a],
                                           "cohens_d": d, "value_added": value_added}

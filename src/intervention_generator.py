@@ -167,10 +167,33 @@ class FullContextUnavailableError(RuntimeError):
     level - see module docstring."""
 
 
-def generate_full_context(vignette_text, emotion, need, stressor_category):
+def generate_full_context(vignette_text, emotion, need, stressor_category,
+                           cache_path=None):
     """Level 4: uses the SDT need AND the specific situation (vignette text
     + broad stressor category). Always calls the LLM - this is the whole
-    point of this level, so unlike levels 2-3 there is no template mode."""
+    point of this level, so unlike levels 2-3 there is no template mode.
+
+    Responses are cached on disk (keyed by the exact inputs) so re-running
+    Experiment 3 - e.g. after a code fix unrelated to message generation -
+    does not re-spend API credits regenerating the same 150 messages.
+    """
+    import hashlib
+    import json as _json
+
+    cache_path = cache_path or os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "results", ".full_context_cache.json")
+    key = hashlib.sha256(
+        f"{vignette_text}|{emotion}|{need}|{stressor_category}".encode("utf-8")
+    ).hexdigest()
+
+    cache = {}
+    if os.path.exists(cache_path):
+        with open(cache_path, encoding="utf-8") as f:
+            cache = _json.load(f)
+    if key in cache:
+        return cache[key]
+
     prompt = (
         "A university faculty member wrote the following about their "
         f"work situation:\n\"{vignette_text}\"\n\n"
@@ -185,10 +208,15 @@ def generate_full_context(vignette_text, emotion, need, stressor_category):
         "SDT, emotions, or psychology terminology explicitly."
     )
     try:
-        return _call_llm(prompt)
+        result = _call_llm(prompt)
     except Exception as exc:  # noqa: BLE001
         raise FullContextUnavailableError(
             f"Could not generate a full-context message: {exc}") from exc
+    cache[key] = result
+    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+    with open(cache_path, "w", encoding="utf-8") as f:
+        _json.dump(cache, f, indent=2)
+    return result
 
 
 # Backward-compatible alias: earlier versions of this repo had a single
