@@ -120,6 +120,16 @@ python run_all.py --use_llm           # also try an LLM few-shot classifier
 Each experiment can also be run on its own, e.g. `python
 experiments/exp1_classification.py --quick`.
 
+**Result files are merged, not overwritten**: if `results/exp1_metrics.json`
+or `exp2_metrics.json`/`exp2_predictions.csv` already contain an
+`llm_fewshot` (or `transformer`) entry from an earlier `--use_llm`/
+`--use_transformer` run, re-running without that flag will **keep** the
+existing entry instead of silently deleting it. (This matters: an earlier
+version of this repo did not do this and a real `llm_fewshot` run got
+overwritten by a later no-API-key smoke test - if you see
+`[exp1]/[exp2] kept existing '...' results from a previous run` in the
+log, that is this safeguard working correctly, not an error.)
+
 **Cost/time estimate for `--use_llm` at the default settings** (150/class
 stratified sample × 7 classes in Exp.1 in-domain, ×5 classes cross-dataset,
 + 75 vignettes in Exp.2; 5 few-shot examples/class ≈ 1,730 API calls,
@@ -443,6 +453,29 @@ assumed away by picking a bigger model.
 - Next step: an empirical pilot with real faculty, using validated scales
   (WLEIS or TEIQue-SF for emotional intelligence, WTMST for teacher
   motivation), with ethics committee approval and informed consent.
+- **No fine-tuned transformer baseline is reported** (the code exists,
+  `--use_transformer`, but needs internet access to the Hugging Face Hub
+  that this repo was built without). This is a deliberate scope choice,
+  not an oversight: `llm_fewshot` already demonstrates that modern,
+  semantically-aware methods close the domain gap that `tfidf_logreg`
+  cannot; a fine-tuned transformer would likely land somewhere between
+  `tfidf_logreg_5class` and `llm_fewshot`, which doesn't change that
+  conclusion. Add it if reviewer feedback specifically asks for it, but it
+  is not load-bearing for this paper's claims - see the framing note next.
+- **On paper framing**: this repo accumulated NLP-benchmarking machinery
+  (4 classifiers, fair-comparison fixes, domain-shift ladder) alongside an
+  Education-feasibility design (SDT, vignettes, ablation, intended for
+  *Trends in Higher Education*). Pick ONE primary framing for the
+  write-up rather than trying to be an NLP paper, an AI/HCI paper, and an
+  Education paper simultaneously. Given the target venue, the
+  recommended framing is: **an SDT-grounded feasibility/design study**,
+  where the classifier comparison is supporting methodology (showing why
+  naive public-data classifiers aren't sufficient and what is needed
+  instead), not the contribution itself. Under that framing, the
+  `emotion_only` vs `need_only` ablation finding (8.4) - the theoretical
+  routing layer, not raw emotion detection, is what drives message
+  quality - is the headline result, and classifier benchmarking detail
+  belongs in Methods/Appendix, not the abstract.
 
 ## 11. Datasets & attribution
 
