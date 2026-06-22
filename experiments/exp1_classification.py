@@ -39,7 +39,9 @@ FIGURES_DIR = os.path.join(RESULTS_DIR, "figures")
 
 
 def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
-        llm_sample_size=150, llm_examples_per_label=5, llm_workers=8):
+        llm_sample_size=150, llm_examples_per_label=5, llm_workers=8,
+        transformer_model_name="distilbert-base-uncased", transformer_epochs=3,
+        skip_transformer_5class=False):
     os.makedirs(RESULTS_DIR, exist_ok=True)
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
@@ -134,7 +136,13 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
     if use_transformer:
         print("\n=== transformer (optional) ===")
         try:
-            tmodel = TransformerBaseline(num_epochs=2 if quick else 3)
+            dev_df = load_goemotions("dev")
+            if quick:
+                dev_df = dev_df.sample(n=min(1000, len(dev_df)), random_state=42)
+            tmodel = TransformerBaseline(model_name=transformer_model_name,
+                                          num_epochs=2 if quick else transformer_epochs,
+                                          val_texts=list(dev_df["text"]),
+                                          val_labels=list(dev_df["label"]))
             tmodel.fit(train_df["text"], train_df["label"])
             preds_in = tmodel.predict(test_df["text"])
             metrics_in = classification_metrics(test_df["label"], preds_in,
@@ -143,9 +151,45 @@ def run(quick=False, use_transformer=False, sample_size=None, use_llm=False,
             metrics_cross = classification_metrics(isear_df["label"], preds_cross,
                                                      COMMON_LABELS)
             all_results["transformer"] = {"in_domain": metrics_in,
-                                           "cross_dataset": metrics_cross}
+                                           "cross_dataset": metrics_cross,
+                                           "model_name": transformer_model_name}
             print(f"in-domain accuracy={metrics_in['accuracy']:.3f}")
-            print(f"cross-dataset accuracy={metrics_cross['accuracy']:.3f}")
+            print(f"cross-dataset accuracy={metrics_cross['accuracy']:.3f} "
+                  f"out_of_label_space={metrics_cross['out_of_label_space_rate']:.1%}")
+            plot_confusion_matrix(metrics_in["confusion_matrix"], EKMAN_PLUS_NEUTRAL,
+                                   "transformer - GoEmotions test (in-domain)",
+                                   os.path.join(FIGURES_DIR, "transformer_in_domain_cm.png"))
+            plot_confusion_matrix(metrics_cross["confusion_matrix"], COMMON_LABELS,
+                                   "transformer - ISEAR (cross-dataset)",
+                                   os.path.join(FIGURES_DIR, "transformer_cross_dataset_cm.png"))
+
+            if not skip_transformer_5class:
+                # Same fairness issue as tfidf_logreg: trained on 7 classes,
+                # it can predict neutral/surprise on ISEAR's 5-class space.
+                # This costs a SECOND full training run (different label
+                # set = different cache key) - skip with
+                # --skip_transformer_5class if that's too slow/expensive.
+                print("\n=== transformer_5class (fair comparison, ISEAR-only) ===")
+                train_5class = train_df[train_df["label"].isin(COMMON_LABELS)].reset_index(drop=True)
+                dev_5class = dev_df[dev_df["label"].isin(COMMON_LABELS)].reset_index(drop=True)
+                tmodel5 = TransformerBaseline(model_name=transformer_model_name,
+                                               num_epochs=2 if quick else transformer_epochs,
+                                               val_texts=list(dev_5class["text"]),
+                                               val_labels=list(dev_5class["label"]))
+                tmodel5.fit(train_5class["text"], train_5class["label"])
+                preds_cross5 = tmodel5.predict(isear_df["text"])
+                metrics_cross5 = classification_metrics(isear_df["label"], preds_cross5, COMMON_LABELS)
+                print(f"cross-dataset (ISEAR) accuracy={metrics_cross5['accuracy']:.3f} "
+                      f"macro_f1={metrics_cross5['macro_f1']:.3f} "
+                      f"out_of_label_space={metrics_cross5['out_of_label_space_rate']:.1%} "
+                      f"(n_train={len(train_5class)})")
+                all_results["transformer_5class"] = {
+                    "cross_dataset": metrics_cross5, "model_name": transformer_model_name,
+                    "note": "trained only on the 5 ISEAR-shared classes; not evaluated "
+                            "in-domain, same rationale as tfidf_logreg_5class"}
+                plot_confusion_matrix(metrics_cross5["confusion_matrix"], COMMON_LABELS,
+                                      "transformer_5class - ISEAR (fair, label-matched)",
+                                      os.path.join(FIGURES_DIR, "transformer_5class_cross_dataset_cm.png"))
         except TransformerUnavailableError as exc:
             print(f"[skipped] transformer baseline unavailable: {exc}")
             all_results["transformer"] = {"skipped_reason": str(exc)}
@@ -217,6 +261,15 @@ if __name__ == "__main__":
     parser.add_argument("--use_transformer", action="store_true",
                          help="also try the optional transformer baseline "
                               "(needs internet access to Hugging Face Hub)")
+    parser.add_argument("--transformer_model_name", default="distilbert-base-uncased",
+                         help="HF Hub model id to fine-tune, e.g. "
+                              "distilbert-base-uncased (fast, default) or "
+                              "roberta-base (slower, likely more accurate, "
+                              "use if you have a GPU)")
+    parser.add_argument("--transformer_epochs", type=int, default=3)
+    parser.add_argument("--skip_transformer_5class", action="store_true",
+                         help="skip the fair label-matched transformer variant "
+                              "(saves a second, equally expensive training run)")
     parser.add_argument("--use_llm", action="store_true",
                          help="also try the optional LLM few-shot baseline "
                               "(needs ANTHROPIC_API_KEY and internet access)")
@@ -236,4 +289,7 @@ if __name__ == "__main__":
         sample_size=args.sample_size, use_llm=args.use_llm,
         llm_sample_size=args.llm_sample_size,
         llm_examples_per_label=args.llm_examples_per_label,
+        transformer_model_name=args.transformer_model_name,
+        transformer_epochs=args.transformer_epochs,
+        skip_transformer_5class=args.skip_transformer_5class,
         llm_workers=args.llm_workers)

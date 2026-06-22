@@ -121,34 +121,70 @@ class TransformerBaseline:
     download the base model on first use. Intended to be run by the user
     on a machine with full internet access, not necessarily inside a
     restricted sandbox.
+
+    Trained models are cached to disk (`cache_dir`) keyed by model name +
+    label set + training set size, so e.g. running --use_transformer in
+    both Experiment 1 and Experiment 2 only pays the training cost once -
+    the second call loads the cached fine-tuned model instead of
+    retraining from scratch, which matters a lot on CPU.
     """
 
     def __init__(self, model_name="distilbert-base-uncased", num_epochs=3,
-                 batch_size=16, lr=2e-5):
+                 batch_size=16, lr=2e-5, cache_dir=None, seed=42,
+                 val_texts=None, val_labels=None):
         self.model_name = model_name
         self.num_epochs = num_epochs
         self.batch_size = batch_size
         self.lr = lr
+        self.seed = seed
+        self.cache_dir = cache_dir or os.path.join(REPO_ROOT, "results", ".transformer_cache")
+        # optional held-out set (e.g. GoEmotions dev split) for a per-epoch
+        # validation accuracy printout - purely diagnostic, not used for
+        # early stopping, to keep this simple and predictable.
+        self.val_texts = val_texts
+        self.val_labels = val_labels
         self.label2id = None
         self.id2label = None
         self.model = None
         self.tokenizer = None
+        self.device = "cpu"
+
+    def _cache_key(self, y):
+        import hashlib
+        key_str = f"{self.model_name}|{sorted(set(y))}|{len(y)}|{self.num_epochs}|{self.lr}"
+        return hashlib.sha256(key_str.encode("utf-8")).hexdigest()[:16]
 
     def fit(self, X, y):
         try:
             import torch
             from torch.utils.data import DataLoader, Dataset
             from transformers import (AutoModelForSequenceClassification,
-                                       AutoTokenizer)
+                                       AutoTokenizer, get_linear_schedule_with_warmup)
         except ImportError as exc:
             raise TransformerUnavailableError(
                 "transformers/torch not installed. "
                 "Run: pip install transformers torch"
             ) from exc
 
+        torch.manual_seed(self.seed)
+        X = list(X)
+        y = list(y)
         labels_sorted = sorted(set(y))
         self.label2id = {lab: i for i, lab in enumerate(labels_sorted)}
         self.id2label = {i: lab for lab, i in self.label2id.items()}
+
+        cache_path = os.path.join(self.cache_dir, self._cache_key(y))
+        if os.path.exists(os.path.join(cache_path, "config.json")):
+            print(f"[TransformerBaseline] loading cached fine-tuned model from {cache_path} "
+                  "(matches model/labels/train-size/epochs/lr of a previous run)")
+            try:
+                self.tokenizer = AutoTokenizer.from_pretrained(cache_path)
+                self.model = AutoModelForSequenceClassification.from_pretrained(cache_path)
+                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+                self.model.to(self.device)
+                return self
+            except Exception as exc:  # noqa: BLE001 - corrupted cache, just retrain
+                print(f"[TransformerBaseline] cache load failed ({exc}), retraining.")
 
         try:
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -178,23 +214,56 @@ class TransformerBaseline:
                 item["labels"] = torch.tensor(self.labels[idx])
                 return item
 
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model.to(device)
-        self.device = device
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model.to(self.device)
+        print(f"[TransformerBaseline] training {self.model_name} on {len(X)} examples, "
+              f"{self.num_epochs} epoch(s), device={self.device}")
 
         dataset = TextDataset(X, y, self.tokenizer, self.label2id)
         loader = DataLoader(dataset, batch_size=self.batch_size, shuffle=True)
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
+        total_steps = len(loader) * self.num_epochs
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=int(0.1 * total_steps), num_training_steps=total_steps)
 
+        import time
         self.model.train()
-        for _ in range(self.num_epochs):
-            for batch in loader:
-                batch = {k: v.to(device) for k, v in batch.items()}
+        for epoch in range(self.num_epochs):
+            t0 = time.time()
+            running_loss, n_batches = 0.0, 0
+            for step, batch in enumerate(loader):
+                batch = {k: v.to(self.device) for k, v in batch.items()}
                 outputs = self.model(**batch)
                 loss = outputs.loss
                 loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
                 optimizer.step()
+                scheduler.step()
                 optimizer.zero_grad()
+                running_loss += loss.item()
+                n_batches += 1
+                if (step + 1) % 200 == 0:
+                    elapsed = time.time() - t0
+                    rate = elapsed / (step + 1)
+                    remaining = (len(loader) - step - 1) * rate
+                    print(f"  epoch {epoch + 1}/{self.num_epochs} "
+                          f"batch {step + 1}/{len(loader)} "
+                          f"avg_loss={running_loss / n_batches:.4f} "
+                          f"~{remaining / 60:.1f} min left this epoch")
+            msg = (f"[TransformerBaseline] epoch {epoch + 1}/{self.num_epochs} done, "
+                   f"avg_loss={running_loss / max(n_batches, 1):.4f}, "
+                   f"{(time.time() - t0):.0f}s")
+            if self.val_texts is not None and self.val_labels is not None:
+                val_preds = self.predict(self.val_texts)
+                val_acc = sum(p == t for p, t in zip(val_preds, self.val_labels)) / len(self.val_labels)
+                msg += f", val_accuracy={val_acc:.3f}"
+                self.model.train()
+            print(msg)
+
+        os.makedirs(cache_path, exist_ok=True)
+        self.model.save_pretrained(cache_path)
+        self.tokenizer.save_pretrained(cache_path)
+        print(f"[TransformerBaseline] cached fine-tuned model to {cache_path}")
         return self
 
     def predict(self, X, labels=None):

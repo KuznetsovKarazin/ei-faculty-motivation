@@ -4,6 +4,10 @@ data/raw/
 # ephemeral LLM API response cache (regenerated per user/run)
 results/.llm_cache.json
 
+# cached fine-tuned transformer checkpoints (large binary files, regenerated
+# locally the first time --use_transformer runs)
+results/.transformer_cache/
+
 # output of exp3b_rubric_analysis.py - only meaningful once real human
 # ratings have been collected and analyzed; must never be a stale/test
 # artifact left over from development (this happened once - see git log)

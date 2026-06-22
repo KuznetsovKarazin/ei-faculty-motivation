@@ -42,7 +42,8 @@ from src.data_loader import load_goemotions
 from src.label_mapping import COMMON_LABELS
 from src.metrics import classification_metrics
 from src.models import (LLMFewShotBaseline, LLMUnavailableError,
-                         NRCLexiconBaseline, TfidfBaseline)
+                         NRCLexiconBaseline, TfidfBaseline, TransformerBaseline,
+                         TransformerUnavailableError)
 from src.plotting import plot_confusion_matrix
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -72,7 +73,8 @@ def per_group_accuracy(rows, pred_key, group_key="expected_emotion"):
 
 
 def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
-        llm_workers=8):
+        llm_workers=8, use_transformer=False, transformer_model_name="distilbert-base-uncased",
+        transformer_epochs=3, skip_transformer_5class=False):
     os.makedirs(RESULTS_DIR, exist_ok=True)
     os.makedirs(FIGURES_DIR, exist_ok=True)
 
@@ -151,6 +153,61 @@ def run(quick=False, sample_size=None, use_llm=False, llm_examples_per_label=5,
                            "tfidf_logreg_5class - faculty vignettes (fair, label-matched)",
                            os.path.join(FIGURES_DIR, "tfidf_logreg_5class_vignettes_cm.png"))
 
+    if use_transformer:
+        print("\n=== transformer (optional) ===")
+        try:
+            tmodel = TransformerBaseline(model_name=transformer_model_name,
+                                          num_epochs=2 if quick else transformer_epochs)
+            # If Exp.1 was already run with --use_transformer on the same
+            # train_df, this hits the on-disk cache instead of retraining -
+            # see TransformerBaseline's cache_dir / _cache_key.
+            tmodel.fit(train_df["text"], train_df["label"])
+            preds_t = tmodel.predict(vignette_texts)
+            pred_key = "transformer_pred"
+            for r, p in zip(vignette_rows, preds_t):
+                r[pred_key] = p
+            metrics_t = classification_metrics(vignette_labels, preds_t, COMMON_LABELS)
+            by_emotion_t = per_group_accuracy(vignette_rows, pred_key, "expected_emotion")
+            by_category_t = per_group_accuracy(vignette_rows, pred_key, "context_tag")
+            print(f"vignette accuracy={metrics_t['accuracy']:.3f} macro_f1={metrics_t['macro_f1']:.3f} "
+                  f"out_of_label_space={metrics_t['out_of_label_space_rate']:.1%}")
+            print("accuracy by emotion:", {k: round(v, 2) for k, v in by_emotion_t.items()})
+            all_metrics["transformer"] = {
+                "overall": metrics_t,
+                "accuracy_by_emotion": by_emotion_t,
+                "accuracy_by_context_tag": by_category_t,
+            }
+            plot_confusion_matrix(metrics_t["confusion_matrix"], COMMON_LABELS,
+                                   "transformer - faculty vignettes (near-domain)",
+                                   os.path.join(FIGURES_DIR, "transformer_vignettes_cm.png"))
+
+            if not skip_transformer_5class:
+                print("\n=== transformer_5class (fair comparison) ===")
+                train_5class = train_df[train_df["label"].isin(COMMON_LABELS)].reset_index(drop=True)
+                tmodel5 = TransformerBaseline(model_name=transformer_model_name,
+                                               num_epochs=2 if quick else transformer_epochs)
+                tmodel5.fit(train_5class["text"], train_5class["label"])
+                preds5_t = tmodel5.predict(vignette_texts)
+                pred_key5 = "transformer_5class_pred"
+                for r, p in zip(vignette_rows, preds5_t):
+                    r[pred_key5] = p
+                metrics5_t = classification_metrics(vignette_labels, preds5_t, COMMON_LABELS)
+                by_emotion5_t = per_group_accuracy(vignette_rows, pred_key5, "expected_emotion")
+                by_category5_t = per_group_accuracy(vignette_rows, pred_key5, "context_tag")
+                print(f"vignette accuracy={metrics5_t['accuracy']:.3f} macro_f1={metrics5_t['macro_f1']:.3f} "
+                      f"(n_train={len(train_5class)})")
+                all_metrics["transformer_5class"] = {
+                    "overall": metrics5_t,
+                    "accuracy_by_emotion": by_emotion5_t,
+                    "accuracy_by_context_tag": by_category5_t,
+                }
+                plot_confusion_matrix(metrics5_t["confusion_matrix"], COMMON_LABELS,
+                                      "transformer_5class - faculty vignettes (fair)",
+                                      os.path.join(FIGURES_DIR, "transformer_5class_vignettes_cm.png"))
+        except TransformerUnavailableError as exc:
+            print(f"[skipped] transformer baseline unavailable: {exc}")
+            all_metrics["transformer"] = {"skipped_reason": str(exc)}
+
     if use_llm:
         print("\n=== llm_fewshot (optional) ===")
         try:
@@ -227,7 +284,18 @@ if __name__ == "__main__":
                               "75 vignettes (needs ANTHROPIC_API_KEY and internet)")
     parser.add_argument("--llm_examples_per_label", type=int, default=5)
     parser.add_argument("--llm_workers", type=int, default=8)
+    parser.add_argument("--use_transformer", action="store_true",
+                         help="also try the transformer baseline on the vignettes "
+                              "(needs internet access to Hugging Face Hub; reuses "
+                              "the cached model from Exp.1 if it was trained there "
+                              "with the same settings)")
+    parser.add_argument("--transformer_model_name", default="distilbert-base-uncased")
+    parser.add_argument("--transformer_epochs", type=int, default=3)
+    parser.add_argument("--skip_transformer_5class", action="store_true")
     args = parser.parse_args()
     run(quick=args.quick, sample_size=args.sample_size, use_llm=args.use_llm,
         llm_examples_per_label=args.llm_examples_per_label,
-        llm_workers=args.llm_workers)
+        llm_workers=args.llm_workers, use_transformer=args.use_transformer,
+        transformer_model_name=args.transformer_model_name,
+        transformer_epochs=args.transformer_epochs,
+        skip_transformer_5class=args.skip_transformer_5class)

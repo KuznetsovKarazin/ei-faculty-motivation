@@ -25,8 +25,15 @@ def main():
                          help="small data subsample, fast smoke test")
     parser.add_argument("--sample_size", type=int, default=None)
     parser.add_argument("--use_transformer", action="store_true",
-                         help="also try the transformer baseline in Exp.1 "
+                         help="also try the transformer baseline in Exp.1/Exp.2 "
                               "(needs internet access to Hugging Face Hub)")
+    parser.add_argument("--transformer_model_name", default="distilbert-base-uncased",
+                         help="HF Hub model id, e.g. distilbert-base-uncased (fast) "
+                              "or roberta-base (slower, likely more accurate)")
+    parser.add_argument("--transformer_epochs", type=int, default=3)
+    parser.add_argument("--skip_transformer_5class", action="store_true",
+                         help="skip the fair label-matched transformer variant "
+                              "(saves a second, equally expensive training run)")
     parser.add_argument("--use_llm", action="store_true",
                          help="also try the LLM few-shot baseline in Exp.1/Exp.2 "
                               "(needs ANTHROPIC_API_KEY and internet access)")
@@ -54,14 +61,21 @@ def main():
                                             use_llm=args.use_llm,
                                             llm_sample_size=args.llm_sample_size,
                                             llm_examples_per_label=args.llm_examples_per_label,
-                                            llm_workers=args.llm_workers)
+                                            llm_workers=args.llm_workers,
+                                            transformer_model_name=args.transformer_model_name,
+                                            transformer_epochs=args.transformer_epochs,
+                                            skip_transformer_5class=args.skip_transformer_5class)
 
     print("\n##### EXPERIMENT 2: domain shift on faculty vignettes #####")
     exp2_results = exp2_domain_shift.run(quick=args.quick,
                                           sample_size=args.sample_size,
                                           use_llm=args.use_llm,
                                           llm_examples_per_label=args.llm_examples_per_label,
-                                          llm_workers=args.llm_workers)
+                                          llm_workers=args.llm_workers,
+                                          use_transformer=args.use_transformer,
+                                          transformer_model_name=args.transformer_model_name,
+                                          transformer_epochs=args.transformer_epochs,
+                                          skip_transformer_5class=args.skip_transformer_5class)
 
     print("\n##### EXPERIMENT 3: intervention message quality (4-level ablation) #####")
     mode = "llm" if args.llm_interventions else "template"
@@ -75,7 +89,8 @@ def main():
         "ISEAR\n(cross-dataset)": {},
         "Vignettes\n(near-domain)": {},
     }
-    for model in ("nrc_lexicon", "tfidf_logreg", "tfidf_logreg_5class", "llm_fewshot"):
+    for model in ("nrc_lexicon", "tfidf_logreg", "tfidf_logreg_5class",
+                  "transformer", "transformer_5class", "llm_fewshot"):
         if model not in exp1_results or "skipped_reason" in exp1_results.get(model, {}):
             continue
         m1 = exp1_results[model]
