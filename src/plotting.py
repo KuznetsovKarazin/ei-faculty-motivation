@@ -101,6 +101,40 @@ def plot_ablation_comparison(means, sems, out_path,
     plt.close(fig)
 
 
+def plot_human_rating_staircase(means_by_level, out_path,
+                                 title="Human expert ratings by personalization level",
+                                 dimensions=None, n_raters=None):
+    """Grouped bar chart: one group per rating dimension, one bar per
+    personalization level within each group. means_by_level:
+    {level: {dimension: mean_1_to_5}}.
+    """
+    levels = list(means_by_level.keys())
+    dims = dimensions or list(next(iter(means_by_level.values())).keys())
+    x = np.arange(len(dims))
+    width = 0.8 / max(len(levels), 1)
+    colors = ["#adb5bd", "#74c69d", "#52b788", "#2d6a4f"]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for i, lvl in enumerate(levels):
+        vals = [means_by_level[lvl][d] for d in dims]
+        offset = (i - (len(levels) - 1) / 2) * width
+        bars = ax.bar(x + offset, vals, width, label=lvl, color=colors[i % len(colors)])
+        for b, v in zip(bars, vals):
+            ax.text(b.get_x() + b.get_width() / 2, v + 0.05, f"{v:.2f}",
+                    ha="center", va="bottom", fontsize=7, rotation=90)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d.replace("_", "\n") for d in dims])
+    ax.set_ylabel("Mean rating (1-5 scale)")
+    ax.set_ylim(1, 5.6)
+    subtitle = f" (n={n_raters} raters)" if n_raters else ""
+    ax.set_title(title + subtitle, fontsize=11)
+    ax.legend(fontsize=8, loc="upper left")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+
+
 def plot_paired_comparison(values_a, values_b, label_a, label_b, out_path,
                             title="Generic vs personalized message relevance",
                             ylabel="TF-IDF similarity to target need"):
