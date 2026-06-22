@@ -130,6 +130,31 @@ overwritten by a later no-API-key smoke test - if you see
 `[exp1]/[exp2] kept existing '...' results from a previous run` in the
 log, that is this safeguard working correctly, not an error.)
 
+**Cost/time estimate for `--use_transformer`** (full data, both the 7-class
+and the fair 5-class variant, `distilbert-base-uncased`, 3 epochs each):
+≈10,500 training batches total. The training loop (forward/backward,
+gradient clipping, LR schedule, model caching) was verified end-to-end
+offline using a tiny randomly-initialized model of the same architecture,
+since this repo was built without internet access to Hugging Face Hub to
+test with real weights - the loop itself is confirmed correct, not just
+reviewed by eye.
+
+| hardware | estimated time |
+|---|:---:|
+| modern multi-core CPU | ≈ 50-70 minutes |
+| older/laptop CPU | ≈ 1.5-3 hours |
+| any GPU (even a free Google Colab T4) | ≈ 5-15 minutes |
+
+No local GPU? Google Colab's free tier is the easiest path: upload/clone
+the repo there, `pip install -r requirements.txt`, run `python run_all.py
+--use_transformer`. Use `--skip_transformer_5class` to halve the time if
+you only want the headline number first, and run `--quick` first
+regardless, just to confirm the environment works before committing to
+the full run. The fine-tuned model is cached
+(`results/.transformer_cache/`, gitignored, keyed by model/labels/train
+size/epochs/lr) so Experiment 2 reuses Experiment 1's model instead of
+retraining, and re-running later with the same settings is instant.
+
 **Cost/time estimate for `--use_llm` at the default settings** (150/class
 stratified sample × 7 classes in Exp.1 in-domain, ×5 classes cross-dataset,
 + 75 vignettes in Exp.2; 5 few-shot examples/class ≈ 1,730 API calls,
@@ -453,15 +478,16 @@ assumed away by picking a bigger model.
 - Next step: an empirical pilot with real faculty, using validated scales
   (WLEIS or TEIQue-SF for emotional intelligence, WTMST for teacher
   motivation), with ethics committee approval and informed consent.
-- **No fine-tuned transformer baseline is reported** (the code exists,
-  `--use_transformer`, but needs internet access to the Hugging Face Hub
-  that this repo was built without). This is a deliberate scope choice,
-  not an oversight: `llm_fewshot` already demonstrates that modern,
-  semantically-aware methods close the domain gap that `tfidf_logreg`
-  cannot; a fine-tuned transformer would likely land somewhere between
-  `tfidf_logreg_5class` and `llm_fewshot`, which doesn't change that
-  conclusion. Add it if reviewer feedback specifically asks for it, but it
-  is not load-bearing for this paper's claims - see the framing note next.
+- **No fine-tuned transformer *results* are reported yet** (the code is
+  implemented, including a fair label-matched variant and on-disk model
+  caching, and its training/predict/caching logic was verified end-to-end
+  offline with a tiny model of the same architecture - real pretrained
+  weights need internet access to the Hugging Face Hub that this repo was
+  built without). Run `--use_transformer` on your own machine (≈50-70 min
+  on CPU, ≈5-15 min on any GPU incl. free Colab - see "Cost/time estimate
+  for `--use_transformer`" above) to get real numbers. Until that is run,
+  write "the codebase supports a transformer baseline; results to follow"
+  rather than "we compared against a transformer baseline."
 - **On paper framing**: this repo accumulated NLP-benchmarking machinery
   (4 classifiers, fair-comparison fixes, domain-shift ladder) alongside an
   Education-feasibility design (SDT, vignettes, ablation, intended for
