@@ -407,7 +407,7 @@ directly:
   author = {Akhmetova, Jamilya and Kuznetsov, Oleksandr and Oshanova, Nurzhamal and
             Zhilkishbayev, Askhat},
   year   = {2026},
-  url    = {https://github.com/<organization-or-username>/ei-faculty-motivation},
+  url    = {https://github.com/KuznetsovKarazin/ei-faculty-motivation},
   note   = {Code and data release accompanying a manuscript submitted to Trends in Higher Education
             (MDPI); see CITATION.cff for the version-specific Zenodo DOI once archived.}
 }
