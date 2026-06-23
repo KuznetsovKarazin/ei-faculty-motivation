@@ -9,7 +9,8 @@ authors:
 version: 1.0.0
 date-released: 2026-06-23
 license: MIT
-repository-code: "https://github.com/<your-username>/ei-faculty-motivation"
+repository-code: "https://github.com/KuznetsovKarazin/ei-faculty-motivation"
+DOI: "https://doi.org/10.5281/zenodo.20817334"
 keywords:
   - emotional intelligence
   - self-determination theory

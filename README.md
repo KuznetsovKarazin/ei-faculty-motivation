@@ -408,8 +408,9 @@ directly:
             Zhilkishbayev, Askhat},
   year   = {2026},
   url    = {https://github.com/KuznetsovKarazin/ei-faculty-motivation},
+  DOI    = {https://doi.org/10.5281/zenodo.20817334},
   note   = {Code and data release accompanying a manuscript submitted to Trends in Higher Education
-            (MDPI); see CITATION.cff for the version-specific Zenodo DOI once archived.}
+            (MDPI)}
 }
 ```
 
@@ -424,6 +425,4 @@ respective files' own headers/notes. Human evaluation data (`results/human_ratin
 `results/human_eval_raw_responses.xlsx`) contains anonymized expert ratings with no identifying fields.
 
 ---
-Usage instructions in Russian: see [`INSTRUCTIONS_RU.md`](INSTRUCTIONS_RU.md).
-Proposed manuscript structure: see [`PAPER_OUTLINE.md`](PAPER_OUTLINE.md).
-Full current manuscript draft: see [`manuscript/manuscript.tex`](manuscript/manuscript.tex).
+
